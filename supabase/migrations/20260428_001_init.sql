@@ -1,4 +1,4 @@
-﻿-- PMO-OVERWATCH Phase 1 schema for Supabase
+-- PMO-OVERWATCH Phase 1 schema for Supabase
 create extension if not exists pgcrypto;
 
 create type app_role as enum ('admin', 'pmo', 'project_manager', 'view_only');
