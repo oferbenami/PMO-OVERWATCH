@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 type NavItem = {
@@ -20,6 +21,9 @@ const navItems: NavItem[] = [
 
 export function TopNav() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+
+  if (pathname === "/login") return null;
 
   return (
     <header className="top-nav" role="banner">
