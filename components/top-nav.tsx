@@ -12,9 +12,10 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { href: "/dashboard", label: "דשבורד" },
+  { href: "/projects/new", label: "פרויקט חדש" },
+  { href: "/quick-update", label: "עדכון מהיר" },
   { href: "/management-report", label: "דוח הנהלה" },
   { href: "/forward-view", label: "מבט 30 יום" },
-  { href: "/quick-update", label: "עדכון מהיר" },
   { href: "/lists", label: "רשימות" },
   { href: "/users", label: "משתמשים" }
 ];
