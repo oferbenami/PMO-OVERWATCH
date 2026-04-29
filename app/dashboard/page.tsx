@@ -1,4 +1,4 @@
-﻿import { getDashboardProjects } from "@/lib/domain/projects";
+import { getDashboardProjects } from "@/lib/domain/projects";
 
 export default async function DashboardPage() {
   const projects = await getDashboardProjects();
@@ -6,34 +6,67 @@ export default async function DashboardPage() {
   return (
     <main className="container">
       <h1>דשבורד פרויקטים</h1>
-      <table className="table card">
-        <thead>
-          <tr>
-            <th>קוד</th>
-            <th>שם</th>
-            <th>מנהל פרויקט</th>
-            <th>סטטוס</th>
-            <th>יעד אכלוס</th>
-            <th>תחזית אכלוס</th>
-          </tr>
-        </thead>
-        <tbody>
-          {projects.map((p) => (
-            <tr key={p.id}>
-              <td>{p.code}</td>
-              <td>{p.name}</td>
-              <td>{p.pmName}</td>
-              <td>
-                <span className="badge" style={{ background: p.statusColor }}>
-                  {p.statusHe}
-                </span>
-              </td>
-              <td>{p.occupancyTarget}</td>
-              <td>{p.occupancyForecast}</td>
+
+      <section className="mobile-only mobile-list" aria-label="דשבורד מובייל">
+        {projects.map((p) => (
+          <article key={p.id} className="card mobile-project-card">
+            <div>
+              <div className="field-label">{p.code}</div>
+              <strong>{p.name}</strong>
+            </div>
+            <div>
+              <span className="badge" style={{ background: p.statusColor }}>
+                {p.statusHe}
+              </span>
+            </div>
+            <div className="mobile-meta">
+              <div>
+                <div className="field-label">מנהל פרויקט</div>
+                <div>{p.pmName}</div>
+              </div>
+              <div>
+                <div className="field-label">יעד אכלוס</div>
+                <div>{p.occupancyTarget}</div>
+              </div>
+              <div>
+                <div className="field-label">תחזית אכלוס</div>
+                <div>{p.occupancyForecast}</div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="desktop-only card" aria-label="דשבורד דסקטופ">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>קוד</th>
+              <th>שם</th>
+              <th>מנהל פרויקט</th>
+              <th>סטטוס</th>
+              <th>יעד אכלוס</th>
+              <th>תחזית אכלוס</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {projects.map((p) => (
+              <tr key={p.id}>
+                <td>{p.code}</td>
+                <td>{p.name}</td>
+                <td>{p.pmName}</td>
+                <td>
+                  <span className="badge" style={{ background: p.statusColor }}>
+                    {p.statusHe}
+                  </span>
+                </td>
+                <td>{p.occupancyTarget}</td>
+                <td>{p.occupancyForecast}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </main>
   );
 }
