@@ -27,6 +27,30 @@ const defaultTopics = [
   { topic_index: 6, topic_name_he: "אחרי האכלוס" }
 ];
 
+const topic5MilestonesTemplate = [
+  { milestone_index: 1, milestone_name_he: "אישור יועץ בטיחות" },
+  { milestone_index: 2, milestone_name_he: "אישור כיבוי אש" },
+  { milestone_index: 3, milestone_name_he: "אישור נגישות" },
+  { milestone_index: 4, milestone_name_he: "אישור פיקוח" },
+  { milestone_index: 5, milestone_name_he: "אישור מתכנן מיזוג" },
+  { milestone_index: 6, milestone_name_he: "אישור מתכנן חשמל" },
+  { milestone_index: 7, milestone_name_he: "אישור אדריכל" },
+  { milestone_index: 8, milestone_name_he: "אישור אכלוס עירייה" },
+  { milestone_index: 9, milestone_name_he: "נשלחו הודעות ללקוחות" },
+  { milestone_index: 10, milestone_name_he: "פורסמו הנחיות ביצוע פנימיות" },
+  { milestone_index: 11, milestone_name_he: "כניסה בפועל לאכלוס" }
+];
+
+const topic6MilestonesTemplate = [
+  { milestone_index: 1, subtopic_index: 1, subtopic_name_he: "מסירה ותיעוד", milestone_name_he: "מסירה ותיעוד" },
+  { milestone_index: 2, subtopic_index: 2, subtopic_name_he: "בדק ואחריות", milestone_name_he: "בדק ואחריות" },
+  { milestone_index: 3, subtopic_index: 3, subtopic_name_he: "העברה לאחזקה", milestone_name_he: "העברה לאחזקה" },
+  { milestone_index: 4, subtopic_index: 4, subtopic_name_he: "סגירה אדמיניסטרטיבית", milestone_name_he: "סגירה אדמיניסטרטיבית" },
+  { milestone_index: 5, subtopic_index: 5, subtopic_name_he: "החזרת הנכס הקודם", milestone_name_he: "תיאום פינוי" },
+  { milestone_index: 6, subtopic_index: 5, subtopic_name_he: "החזרת הנכס הקודם", milestone_name_he: "תיקונים / השבה למצב נדרש" },
+  { milestone_index: 7, subtopic_index: 5, subtopic_name_he: "החזרת הנכס הקודם", milestone_name_he: "מסירה לגורם מקבל / בעל הנכס" }
+];
+
 export async function GET() {
   const projects = await getDashboardProjects();
   return NextResponse.json({ projects });
@@ -83,7 +107,37 @@ export async function POST(request: Request) {
     topic_name_he: topic.topic_name_he,
     status: "on_track"
   }));
-  await supabase.from("project_topics").insert(topicsPayload);
+  const { data: insertedTopics } = await supabase
+    .from("project_topics")
+    .insert(topicsPayload)
+    .select("id, topic_index");
+
+  const topic5 = (insertedTopics ?? []).find((t) => t.topic_index === 5);
+  const topic6 = (insertedTopics ?? []).find((t) => t.topic_index === 6);
+
+  if (topic5?.id) {
+    await supabase.from("milestones").insert(
+      topic5MilestonesTemplate.map((m) => ({
+        topic_id: topic5.id,
+        milestone_index: m.milestone_index,
+        milestone_name_he: m.milestone_name_he,
+        status: "on_track"
+      }))
+    );
+  }
+
+  if (topic6?.id) {
+    await supabase.from("milestones").insert(
+      topic6MilestonesTemplate.map((m) => ({
+        topic_id: topic6.id,
+        milestone_index: m.milestone_index,
+        subtopic_index: m.subtopic_index,
+        subtopic_name_he: m.subtopic_name_he,
+        milestone_name_he: m.milestone_name_he,
+        status: "on_track"
+      }))
+    );
+  }
 
   const warnings = calculateProjectWarnings({
     internalPmId: body.internalPmId,

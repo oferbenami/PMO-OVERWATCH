@@ -1,3 +1,5 @@
+import { Topic5Panel } from "@/components/topic5-panel";
+import { Topic6Panel } from "@/components/topic6-panel";
 import { getProjectDetails } from "@/lib/domain/projects";
 
 export default async function ProjectCardPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,6 +40,18 @@ export default async function ProjectCardPage({ params }: { params: Promise<{ id
           ))}
         </ul>
       </section>
+
+      <Topic5Panel
+        projectId={project.id}
+        initialMilestones={project.topics.find((t) => t.topicIndex === 5)?.milestones ?? []}
+        initialReadiness={project.topic5Readiness}
+      />
+
+      <Topic6Panel
+        projectId={project.id}
+        initialMilestones={project.topics.find((t) => t.topicIndex === 6)?.milestones ?? []}
+        initialProgress={project.topic6Progress}
+      />
     </main>
   );
 }

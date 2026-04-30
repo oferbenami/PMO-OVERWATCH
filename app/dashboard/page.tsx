@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getDashboardProjects } from "@/lib/domain/projects";
 
 export default async function DashboardPage() {
@@ -9,31 +10,39 @@ export default async function DashboardPage() {
 
       <section className="mobile-only mobile-list" aria-label="דשבורד מובייל">
         {projects.map((p) => (
-          <article key={p.id} className="card mobile-project-card">
-            <div>
-              <div className="field-label">{p.code}</div>
-              <strong>{p.name}</strong>
-            </div>
-            <div>
-              <span className="badge" style={{ background: p.statusColor }}>
-                {p.statusHe}
-              </span>
-            </div>
-            <div className="mobile-meta">
+          <Link
+            key={p.id}
+            href={`/project/${p.id}`}
+            className="dashboard-mobile-link"
+            aria-label={`פתיחת פרויקט ${p.name} לעדכון מהיר`}
+          >
+            <article className="card mobile-project-card">
               <div>
-                <div className="field-label">מנהל פרויקט</div>
-                <div>{p.pmName}</div>
+                <div className="field-label">{p.code}</div>
+                <strong>{p.name}</strong>
               </div>
               <div>
-                <div className="field-label">יעד אכלוס</div>
-                <div>{p.occupancyTarget}</div>
+                <span className="badge" style={{ background: p.statusColor }}>
+                  {p.statusHe}
+                </span>
               </div>
-              <div>
-                <div className="field-label">תחזית אכלוס</div>
-                <div>{p.occupancyForecast}</div>
+              <div className="mobile-meta">
+                <div>
+                  <div className="field-label">מנהל פרויקט</div>
+                  <div>{p.pmName}</div>
+                </div>
+                <div>
+                  <div className="field-label">יעד אכלוס</div>
+                  <div>{p.occupancyTarget}</div>
+                </div>
+                <div>
+                  <div className="field-label">תחזית אכלוס</div>
+                  <div>{p.occupancyForecast}</div>
+                </div>
               </div>
-            </div>
-          </article>
+              <div className="field-label dashboard-open-hint">פתח לעדכון</div>
+            </article>
+          </Link>
         ))}
       </section>
 
@@ -53,7 +62,15 @@ export default async function DashboardPage() {
             {projects.map((p) => (
               <tr key={p.id}>
                 <td>{p.code}</td>
-                <td>{p.name}</td>
+                <td>
+                  <Link
+                    href={`/project/${p.id}`}
+                    className="dashboard-project-link"
+                    aria-label={`פתיחת פרויקט ${p.name} לעדכון מהיר`}
+                  >
+                    {p.name}
+                  </Link>
+                </td>
                 <td>{p.pmName}</td>
                 <td>
                   <span className="badge" style={{ background: p.statusColor }}>

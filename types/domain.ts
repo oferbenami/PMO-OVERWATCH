@@ -12,6 +12,7 @@ export interface ProjectDashboardRow {
   statusColor: string;
   exceptionMilestone: string;
   requiresManagementAction: boolean;
+  topic5NotReady?: boolean;
 }
 
 export interface TopicState {
@@ -27,15 +28,55 @@ export interface ManagedOption {
   fullName: string;
 }
 
-export interface ProjectWarning {
-  code: string;
-  message: string;
-}
-
 export interface ProjectContractor {
   domain: string;
   contractorId: string | null;
   contractorName: string | null;
+}
+
+export interface ProjectMilestone {
+  id: string;
+  milestoneIndex: number | null;
+  subtopicIndex?: number | null;
+  subtopicName?: string | null;
+  name: string;
+  status: ProjectStatus;
+  targetDate: string | null;
+  forecastDate: string | null;
+  actualDate: string | null;
+  note: string | null;
+  isNotRelevant: boolean;
+}
+
+export interface ProjectTopic {
+  id: string;
+  topicIndex: number;
+  name: string;
+  status: ProjectStatus;
+  milestones: ProjectMilestone[];
+}
+
+export interface Topic5Readiness {
+  canCompleteMilestone11: boolean;
+  missingPrerequisites: Array<{ milestoneIndex: number; name: string }>;
+}
+
+export interface Topic6SubtopicProgress {
+  subtopicIndex: number;
+  subtopicName: string;
+  isRequired: boolean;
+  isComplete: boolean;
+}
+
+export interface Topic6Progress {
+  isTrackingComplete: boolean;
+  subtopics: Topic6SubtopicProgress[];
+}
+
+export interface ProjectWarning {
+  code: string;
+  message: string;
+  missingPrerequisites?: Array<{ milestoneIndex: number; name: string }>;
 }
 
 export interface ProjectDetails {
@@ -53,4 +94,7 @@ export interface ProjectDetails {
   requiresManagementAction: boolean;
   warnings: ProjectWarning[];
   contractors: ProjectContractor[];
+  topics: ProjectTopic[];
+  topic5Readiness: Topic5Readiness;
+  topic6Progress: Topic6Progress;
 }
