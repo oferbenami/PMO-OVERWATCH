@@ -12,20 +12,40 @@ type ProjectOption = {
   requiresManagementAction: boolean;
 };
 
+type Option = { id: string; full_name: string };
+
+const contractorDomains = [
+  { value: "construction_electrical_plumbing", label: "בינוי+חשמל+אינסטלציה" },
+  { value: "hvac", label: "מיזוג אוויר" },
+  { value: "furniture", label: "ריהוט" },
+  { value: "branding_signage", label: "מיתוג ושילוט" }
+] as const;
+
 export default function QuickUpdatePage() {
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [projectId, setProjectId] = useState("");
   const [occupancyForecast, setOccupancyForecast] = useState("");
   const [status, setStatus] = useState<ProjectStatus>("on_track");
   const [requiresManagementAction, setRequiresManagementAction] = useState(false);
+  const [freezeReason, setFreezeReason] = useState("");
+  const [freezeNote, setFreezeNote] = useState("");
+  const [contractors, setContractors] = useState<Option[]>([]);
+  const [selectedContractors, setSelectedContractors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
 
   useEffect(() => {
     const load = async () => {
-      const response = await fetch("/api/projects");
-      const payload = await response.json();
-      const rows: ProjectOption[] = payload.projects ?? [];
+      const [projectsResponse, listsResponse] = await Promise.all([
+        fetch("/api/projects"),
+        fetch("/api/managed-lists")
+      ]);
+      const projectsPayload = await projectsResponse.json();
+      const rows: ProjectOption[] = projectsPayload.projects ?? [];
       setProjects(rows);
+
+      const listsPayload = await listsResponse.json();
+      setContractors(listsPayload.contractors ?? []);
+
       if (rows[0]) {
         setProjectId(rows[0].id);
         setOccupancyForecast(rows[0].occupancyForecast === "--" ? "" : rows[0].occupancyForecast);
@@ -45,6 +65,10 @@ export default function QuickUpdatePage() {
     setRequiresManagementAction(selected.requiresManagementAction);
   };
 
+  const setContractor = (domain: string, contractorId: string) => {
+    setSelectedContractors((prev) => ({ ...prev, [domain]: contractorId }));
+  };
+
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setMessage("");
@@ -55,17 +79,26 @@ export default function QuickUpdatePage() {
       body: JSON.stringify({
         occupancyForecast,
         computedProjectStatus: status,
-        requiresManagementAction
+        requiresManagementAction,
+        freezeReason: freezeReason || null,
+        freezeNote: freezeNote || null,
+        contractors: contractorDomains.map((domain) => ({
+          domain: domain.value,
+          contractorId: selectedContractors[domain.value] || null
+        }))
       })
     });
 
+    const payload = await response.json();
     if (!response.ok) {
-      const payload = await response.json();
       setMessage(payload.error ?? "עדכון נכשל");
       return;
     }
 
-    setMessage("העדכון נשמר בהצלחה");
+    const warningText = Array.isArray(payload.warnings) && payload.warnings.length
+      ? ` | אזהרות: ${payload.warnings.map((w: { message: string }) => w.message).join("; ")}`
+      : "";
+    setMessage(`העדכון נשמר בהצלחה${warningText}`);
   };
 
   return (
@@ -76,9 +109,7 @@ export default function QuickUpdatePage() {
           <div className="field-label">פרויקט</div>
           <select value={projectId} onChange={(e) => onProjectChange(e.target.value)} required>
             {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.code} - {project.name}
-              </option>
+              <option key={project.id} value={project.id}>{project.code} - {project.name}</option>
             ))}
           </select>
         </label>
@@ -101,18 +132,33 @@ export default function QuickUpdatePage() {
         </label>
 
         <label>
-          <input
-            type="checkbox"
-            checked={requiresManagementAction}
-            onChange={(e) => setRequiresManagementAction(e.target.checked)}
-          />
+          <input type="checkbox" checked={requiresManagementAction} onChange={(e) => setRequiresManagementAction(e.target.checked)} />
           <span style={{ marginInlineStart: 8 }}>נדרש טיפול הנהלה</span>
         </label>
 
-        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>
-          שמירת עדכון
-        </button>
+        <label>
+          <div className="field-label">סיבת הקפאה (אופציונלי)</div>
+          <input value={freezeReason} onChange={(e) => setFreezeReason(e.target.value)} />
+        </label>
 
+        <label>
+          <div className="field-label">הערת הקפאה (אופציונלי)</div>
+          <input value={freezeNote} onChange={(e) => setFreezeNote(e.target.value)} />
+        </label>
+
+        {contractorDomains.map((domain) => (
+          <label key={domain.value}>
+            <div className="field-label">קבלן {domain.label}</div>
+            <select value={selectedContractors[domain.value] ?? ""} onChange={(e) => setContractor(domain.value, e.target.value)}>
+              <option value="">ללא</option>
+              {contractors.map((contractor) => (
+                <option key={contractor.id} value={contractor.id}>{contractor.full_name}</option>
+              ))}
+            </select>
+          </label>
+        ))}
+
+        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת עדכון</button>
         {message ? <p>{message}</p> : null}
       </form>
     </main>
