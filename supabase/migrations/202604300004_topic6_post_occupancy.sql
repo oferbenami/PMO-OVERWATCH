@@ -41,8 +41,8 @@ set
   subtopic_index = tmpl.subtopic_index,
   subtopic_name_he = tmpl.subtopic_name_he
 from project_topics pt
-join topic6_milestone_templates tmpl
-  on tmpl.milestone_index = m.milestone_index
+join topic6_milestone_templates tmpl on true
 where m.topic_id = pt.id
+  and tmpl.milestone_index = m.milestone_index
   and pt.topic_index = 6
   and (m.subtopic_index is null or m.subtopic_name_he is null);

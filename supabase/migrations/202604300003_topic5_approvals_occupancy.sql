@@ -43,7 +43,7 @@ where pt.topic_index = 5
 with topic5_ordered as (
   select
     m.id,
-    row_number() over (partition by m.topic_id order by m.created_at, m.id) as rn
+    row_number() over (partition by m.topic_id order by m.id) as rn
   from milestones m
   join project_topics pt on pt.id = m.topic_id
   where pt.topic_index = 5
@@ -54,4 +54,3 @@ set milestone_index = topic5_ordered.rn
 from topic5_ordered
 where m.id = topic5_ordered.id
   and topic5_ordered.rn between 1 and 11;
-
