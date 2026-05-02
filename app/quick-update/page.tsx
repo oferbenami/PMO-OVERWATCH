@@ -52,6 +52,12 @@ const freezeReasons = [
   { value: "other", label: "אחר" }
 ] as const;
 
+function MsgP({ msg }: { msg: string }) {
+  if (!msg) return null;
+  const isError = msg.includes("נכשל") || msg.includes("שגיאה") || msg.includes("לא ניתן");
+  return <p className={`form-message ${isError ? "error" : "success"}`}>{msg}</p>;
+}
+
 export default function QuickUpdatePage() {
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [projectId, setProjectId] = useState("");
@@ -108,6 +114,7 @@ export default function QuickUpdatePage() {
   const [topic6DelayReason, setTopic6DelayReason] = useState("");
   const [topic6IsNotRelevant, setTopic6IsNotRelevant] = useState(false);
   const [topic6Message, setTopic6Message] = useState("");
+
   const [topicSchedules, setTopicSchedules] = useState<Array<{
     topicIndex: number;
     topicName: string;
@@ -181,6 +188,7 @@ export default function QuickUpdatePage() {
     load();
   }, []);
 
+  // Load selected milestone data into form fields
   useEffect(() => {
     setTopic3Status(selectedTopic3Milestone?.status ?? "on_track");
     setTopic3TargetDate(selectedTopic3Milestone?.targetDate ?? "");
@@ -227,6 +235,34 @@ export default function QuickUpdatePage() {
     setScheduleForecastDate(selected?.forecastDate ?? "");
     setScheduleActualDate(selected?.actualDate ?? "");
   }, [scheduleTopicIndex, topicSchedules]);
+
+  // Auto-clear target/forecast when status switches to completed
+  useEffect(() => {
+    if (topic3Status === "completed") { setTopic3TargetDate(""); setTopic3ForecastDate(""); }
+  }, [topic3Status]);
+  useEffect(() => {
+    if (topic4Status === "completed") { setTopic4TargetDate(""); setTopic4ForecastDate(""); }
+  }, [topic4Status]);
+  useEffect(() => {
+    if (milestoneStatus === "completed") { setMilestoneTargetDate(""); setMilestoneForecastDate(""); }
+  }, [milestoneStatus]);
+  useEffect(() => {
+    if (topic6Status === "completed") { setTopic6TargetDate(""); setTopic6ForecastDate(""); }
+  }, [topic6Status]);
+
+  // Auto-set completed + clear target/forecast when actualDate is entered
+  useEffect(() => {
+    if (topic3ActualDate) { setTopic3Status("completed"); setTopic3TargetDate(""); setTopic3ForecastDate(""); }
+  }, [topic3ActualDate]);
+  useEffect(() => {
+    if (topic4ActualDate) { setTopic4Status("completed"); setTopic4TargetDate(""); setTopic4ForecastDate(""); }
+  }, [topic4ActualDate]);
+  useEffect(() => {
+    if (milestoneActualDate) { setMilestoneStatus("completed"); setMilestoneTargetDate(""); setMilestoneForecastDate(""); }
+  }, [milestoneActualDate]);
+  useEffect(() => {
+    if (topic6ActualDate) { setTopic6Status("completed"); setTopic6TargetDate(""); setTopic6ForecastDate(""); }
+  }, [topic6ActualDate]);
 
   const onProjectChange = async (id: string) => {
     setProjectId(id);
@@ -347,77 +383,262 @@ export default function QuickUpdatePage() {
   return (
     <main className="container">
       <h1>עדכון מהיר</h1>
-      <form className="card grid" onSubmit={submitProjectUpdate}>
+
+      <form className="card grid topic-project" onSubmit={submitProjectUpdate}>
         <h2>עדכון פרויקט</h2>
-        <label><div className="field-label">פרויקט</div><select value={projectId} onChange={(e) => onProjectChange(e.target.value)} required>{projects.map((project) => <option key={project.id} value={project.id}>{project.code} - {project.name}</option>)}</select></label>
-        <label><div className="field-label">תחזית אכלוס</div><input type="date" value={occupancyForecast} onChange={(e) => setOccupancyForecast(e.target.value)} required /></label>
-        <label><div className="field-label">סטטוס</div><select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
-        <label><input type="checkbox" checked={requiresManagementAction} onChange={(e) => setRequiresManagementAction(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>נדרש טיפול הנהלה</span></label>
-        <label><input type="checkbox" checked={isFrozen} onChange={(e) => setIsFrozen(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>פרויקט מוקפא</span></label>
-        <label><div className="field-label">סיבת הקפאה</div><select value={freezeReason} onChange={(e) => setFreezeReason(e.target.value)}><option value="">ללא</option>{freezeReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
-        <label><div className="field-label">הערת הקפאה (אופציונלי)</div><input value={freezeNote} onChange={(e) => setFreezeNote(e.target.value)} /></label>
-        {contractorDomains.map((domain) => <label key={domain.value}><div className="field-label">קבלן {domain.label}</div><select value={selectedContractors[domain.value] ?? ""} onChange={(e) => setContractor(domain.value, e.target.value)}><option value="">ללא</option>{contractors.map((contractor) => <option key={contractor.id} value={contractor.id}>{contractor.full_name}</option>)}</select></label>)}
-        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת עדכון</button>
-        {message ? <p>{message}</p> : null}
+        <label>
+          <div className="field-label">פרויקט</div>
+          <select value={projectId} onChange={(e) => onProjectChange(e.target.value)} required>
+            {projects.map((project) => <option key={project.id} value={project.id}>{project.code} - {project.name}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">תחזית אכלוס</div>
+          <input type="date" value={occupancyForecast} onChange={(e) => setOccupancyForecast(e.target.value)} required />
+        </label>
+        <label>
+          <div className="field-label">סטטוס</div>
+          <select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)}>
+            {milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </label>
+        <label className="checkbox-row">
+          <input type="checkbox" checked={requiresManagementAction} onChange={(e) => setRequiresManagementAction(e.target.checked)} />
+          <span>נדרש טיפול הנהלה</span>
+        </label>
+        <label className="checkbox-row">
+          <input type="checkbox" checked={isFrozen} onChange={(e) => setIsFrozen(e.target.checked)} />
+          <span>פרויקט מוקפא</span>
+        </label>
+        <label>
+          <div className="field-label">סיבת הקפאה</div>
+          <select value={freezeReason} onChange={(e) => setFreezeReason(e.target.value)}>
+            <option value="">ללא</option>
+            {freezeReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">הערת הקפאה (אופציונלי)</div>
+          <input value={freezeNote} onChange={(e) => setFreezeNote(e.target.value)} />
+        </label>
+        {contractorDomains.map((domain) => (
+          <label key={domain.value}>
+            <div className="field-label">קבלן {domain.label}</div>
+            <select value={selectedContractors[domain.value] ?? ""} onChange={(e) => setContractor(domain.value, e.target.value)}>
+              <option value="">ללא</option>
+              {contractors.map((contractor) => <option key={contractor.id} value={contractor.id}>{contractor.full_name}</option>)}
+            </select>
+          </label>
+        ))}
+        <button type="submit" className="btn-primary">שמירת עדכון</button>
+        <MsgP msg={message} />
       </form>
 
-      <form className="card grid" onSubmit={submitTopic3MilestoneUpdate} style={{ marginTop: 16 }}>
-        <h2>עדכון אבן דרך פרק 3</h2>
-        <label><div className="field-label">אבן דרך</div><select value={selectedTopic3MilestoneId} onChange={(e) => setSelectedTopic3MilestoneId(e.target.value)} required>{topic3Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.subtopicName ?? "--"} - {m.name}</option>)}</select></label>
-        <label><div className="field-label">סטטוס</div><select value={topic3Status} onChange={(e) => setTopic3Status(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
-        <label><div className="field-label">תאריך יעד</div><input type="date" value={topic3TargetDate} onChange={(e) => setTopic3TargetDate(e.target.value)} /></label>
-        <label><div className="field-label">תאריך תחזית</div><input type="date" value={topic3ForecastDate} onChange={(e) => setTopic3ForecastDate(e.target.value)} /></label>
-        <label><div className="field-label">תאריך בפועל</div><input type="date" value={topic3ActualDate} onChange={(e) => setTopic3ActualDate(e.target.value)} /></label>
-        <label><div className="field-label">סיבת עיכוב</div><select value={topic3DelayReason} onChange={(e) => setTopic3DelayReason(e.target.value)}><option value="">ללא</option>{delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
-        <label><div className="field-label">הערה</div><input value={topic3Note} onChange={(e) => setTopic3Note(e.target.value)} /></label>
-        <label><input type="checkbox" checked={topic3IsNotRelevant} onChange={(e) => setTopic3IsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
-        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
-        {topic3Message ? <p>{topic3Message}</p> : null}
+      <form className="card grid topic-3" onSubmit={submitTopic3MilestoneUpdate} style={{ marginTop: 16 }}>
+        <h2>עדכון אבן דרך – פרק 3</h2>
+        <label>
+          <div className="field-label">אבן דרך</div>
+          <select value={selectedTopic3MilestoneId} onChange={(e) => setSelectedTopic3MilestoneId(e.target.value)} required>
+            {topic3Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.subtopicName ?? "--"} - {m.name}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">סטטוס</div>
+          <select value={topic3Status} onChange={(e) => setTopic3Status(e.target.value as ProjectStatus)}>
+            {milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">
+            תאריך יעד
+            {topic3Status === "completed" && <span className="not-relevant-tag">לא רלוונטי</span>}
+          </div>
+          <input type="date" value={topic3TargetDate} onChange={(e) => setTopic3TargetDate(e.target.value)} disabled={topic3Status === "completed"} />
+        </label>
+        <label>
+          <div className="field-label">
+            תאריך תחזית
+            {topic3Status === "completed" && <span className="not-relevant-tag">לא רלוונטי</span>}
+          </div>
+          <input type="date" value={topic3ForecastDate} onChange={(e) => setTopic3ForecastDate(e.target.value)} disabled={topic3Status === "completed"} />
+        </label>
+        <label>
+          <div className="field-label">תאריך בפועל</div>
+          <input type="date" value={topic3ActualDate} onChange={(e) => setTopic3ActualDate(e.target.value)} />
+        </label>
+        <label>
+          <div className="field-label">סיבת עיכוב</div>
+          <select value={topic3DelayReason} onChange={(e) => setTopic3DelayReason(e.target.value)}>
+            <option value="">ללא</option>
+            {delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">הערה</div>
+          <input value={topic3Note} onChange={(e) => setTopic3Note(e.target.value)} />
+        </label>
+        <label className="checkbox-row">
+          <input type="checkbox" checked={topic3IsNotRelevant} onChange={(e) => setTopic3IsNotRelevant(e.target.checked)} />
+          <span>לא רלוונטי</span>
+        </label>
+        <button type="submit" className="btn-primary">שמירת אבן דרך</button>
+        <MsgP msg={topic3Message} />
       </form>
 
-      <form className="card grid" onSubmit={submitTopic4MilestoneUpdate} style={{ marginTop: 16 }}>
-        <h2>עדכון אבן דרך פרק 4</h2>
-        <label><div className="field-label">אבן דרך</div><select value={selectedTopic4MilestoneId} onChange={(e) => setSelectedTopic4MilestoneId(e.target.value)} required>{topic4Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.name}</option>)}</select></label>
-        <label><div className="field-label">סטטוס</div><select value={topic4Status} onChange={(e) => setTopic4Status(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
-        <label><div className="field-label">תאריך יעד</div><input type="date" value={topic4TargetDate} onChange={(e) => setTopic4TargetDate(e.target.value)} /></label>
-        <label><div className="field-label">תאריך תחזית</div><input type="date" value={topic4ForecastDate} onChange={(e) => setTopic4ForecastDate(e.target.value)} /></label>
-        <label><div className="field-label">תאריך בפועל</div><input type="date" value={topic4ActualDate} onChange={(e) => setTopic4ActualDate(e.target.value)} /></label>
-        <label><div className="field-label">סיבת עיכוב</div><select value={topic4DelayReason} onChange={(e) => setTopic4DelayReason(e.target.value)}><option value="">ללא</option>{delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
-        <label><div className="field-label">הערה</div><input value={topic4Note} onChange={(e) => setTopic4Note(e.target.value)} /></label>
-        <label><input type="checkbox" checked={topic4IsNotRelevant} onChange={(e) => setTopic4IsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
-        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
-        {topic4Message ? <p>{topic4Message}</p> : null}
+      <form className="card grid topic-4" onSubmit={submitTopic4MilestoneUpdate} style={{ marginTop: 16 }}>
+        <h2>עדכון אבן דרך – פרק 4</h2>
+        <label>
+          <div className="field-label">אבן דרך</div>
+          <select value={selectedTopic4MilestoneId} onChange={(e) => setSelectedTopic4MilestoneId(e.target.value)} required>
+            {topic4Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.name}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">סטטוס</div>
+          <select value={topic4Status} onChange={(e) => setTopic4Status(e.target.value as ProjectStatus)}>
+            {milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">
+            תאריך יעד
+            {topic4Status === "completed" && <span className="not-relevant-tag">לא רלוונטי</span>}
+          </div>
+          <input type="date" value={topic4TargetDate} onChange={(e) => setTopic4TargetDate(e.target.value)} disabled={topic4Status === "completed"} />
+        </label>
+        <label>
+          <div className="field-label">
+            תאריך תחזית
+            {topic4Status === "completed" && <span className="not-relevant-tag">לא רלוונטי</span>}
+          </div>
+          <input type="date" value={topic4ForecastDate} onChange={(e) => setTopic4ForecastDate(e.target.value)} disabled={topic4Status === "completed"} />
+        </label>
+        <label>
+          <div className="field-label">תאריך בפועל</div>
+          <input type="date" value={topic4ActualDate} onChange={(e) => setTopic4ActualDate(e.target.value)} />
+        </label>
+        <label>
+          <div className="field-label">סיבת עיכוב</div>
+          <select value={topic4DelayReason} onChange={(e) => setTopic4DelayReason(e.target.value)}>
+            <option value="">ללא</option>
+            {delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">הערה</div>
+          <input value={topic4Note} onChange={(e) => setTopic4Note(e.target.value)} />
+        </label>
+        <label className="checkbox-row">
+          <input type="checkbox" checked={topic4IsNotRelevant} onChange={(e) => setTopic4IsNotRelevant(e.target.checked)} />
+          <span>לא רלוונטי</span>
+        </label>
+        <button type="submit" className="btn-primary">שמירת אבן דרך</button>
+        <MsgP msg={topic4Message} />
       </form>
 
-      <form className="card grid" onSubmit={submitMilestoneUpdate} style={{ marginTop: 16 }}>
-        <h2>עדכון אבן דרך פרק 5</h2>
-        <label><div className="field-label">אבן דרך</div><select value={selectedMilestoneId} onChange={(e) => setSelectedMilestoneId(e.target.value)} required>{topic5Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.name}</option>)}</select></label>
-        <label><div className="field-label">סטטוס</div><select value={milestoneStatus} onChange={(e) => setMilestoneStatus(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
-        <label><div className="field-label">תאריך יעד</div><input type="date" value={milestoneTargetDate} onChange={(e) => setMilestoneTargetDate(e.target.value)} /></label>
-        <label><div className="field-label">תאריך תחזית</div><input type="date" value={milestoneForecastDate} onChange={(e) => setMilestoneForecastDate(e.target.value)} /></label>
-        <label><div className="field-label">תאריך בפועל</div><input type="date" value={milestoneActualDate} onChange={(e) => setMilestoneActualDate(e.target.value)} /></label>
-        <label><div className="field-label">סיבת עיכוב</div><select value={milestoneDelayReason} onChange={(e) => setMilestoneDelayReason(e.target.value)}><option value="">ללא</option>{delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
-        <label><div className="field-label">הערה</div><input value={milestoneNote} onChange={(e) => setMilestoneNote(e.target.value)} /></label>
-        <label><input type="checkbox" checked={milestoneIsNotRelevant} onChange={(e) => setMilestoneIsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
-        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
-        {milestoneMessage ? <p>{milestoneMessage}</p> : null}
+      <form className="card grid topic-5" onSubmit={submitMilestoneUpdate} style={{ marginTop: 16 }}>
+        <h2>עדכון אבן דרך – פרק 5</h2>
+        <label>
+          <div className="field-label">אבן דרך</div>
+          <select value={selectedMilestoneId} onChange={(e) => setSelectedMilestoneId(e.target.value)} required>
+            {topic5Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.name}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">סטטוס</div>
+          <select value={milestoneStatus} onChange={(e) => setMilestoneStatus(e.target.value as ProjectStatus)}>
+            {milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">
+            תאריך יעד
+            {milestoneStatus === "completed" && <span className="not-relevant-tag">לא רלוונטי</span>}
+          </div>
+          <input type="date" value={milestoneTargetDate} onChange={(e) => setMilestoneTargetDate(e.target.value)} disabled={milestoneStatus === "completed"} />
+        </label>
+        <label>
+          <div className="field-label">
+            תאריך תחזית
+            {milestoneStatus === "completed" && <span className="not-relevant-tag">לא רלוונטי</span>}
+          </div>
+          <input type="date" value={milestoneForecastDate} onChange={(e) => setMilestoneForecastDate(e.target.value)} disabled={milestoneStatus === "completed"} />
+        </label>
+        <label>
+          <div className="field-label">תאריך בפועל</div>
+          <input type="date" value={milestoneActualDate} onChange={(e) => setMilestoneActualDate(e.target.value)} />
+        </label>
+        <label>
+          <div className="field-label">סיבת עיכוב</div>
+          <select value={milestoneDelayReason} onChange={(e) => setMilestoneDelayReason(e.target.value)}>
+            <option value="">ללא</option>
+            {delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">הערה</div>
+          <input value={milestoneNote} onChange={(e) => setMilestoneNote(e.target.value)} />
+        </label>
+        <label className="checkbox-row">
+          <input type="checkbox" checked={milestoneIsNotRelevant} onChange={(e) => setMilestoneIsNotRelevant(e.target.checked)} />
+          <span>לא רלוונטי</span>
+        </label>
+        <button type="submit" className="btn-primary">שמירת אבן דרך</button>
+        <MsgP msg={milestoneMessage} />
       </form>
 
-      <form className="card grid" onSubmit={submitTopic6MilestoneUpdate} style={{ marginTop: 16 }}>
-        <h2>עדכון אבן דרך פרק 6</h2>
-        <label><div className="field-label">אבן דרך</div><select value={selectedTopic6MilestoneId} onChange={(e) => setSelectedTopic6MilestoneId(e.target.value)} required>{topic6Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.subtopicName ?? "--"} - {m.name}</option>)}</select></label>
-        <label><div className="field-label">סטטוס</div><select value={topic6Status} onChange={(e) => setTopic6Status(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
-        <label><div className="field-label">תאריך יעד</div><input type="date" value={topic6TargetDate} onChange={(e) => setTopic6TargetDate(e.target.value)} /></label>
-        <label><div className="field-label">תאריך תחזית</div><input type="date" value={topic6ForecastDate} onChange={(e) => setTopic6ForecastDate(e.target.value)} /></label>
-        <label><div className="field-label">תאריך בפועל</div><input type="date" value={topic6ActualDate} onChange={(e) => setTopic6ActualDate(e.target.value)} /></label>
-        <label><div className="field-label">סיבת עיכוב</div><select value={topic6DelayReason} onChange={(e) => setTopic6DelayReason(e.target.value)}><option value="">ללא</option>{delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
-        <label><div className="field-label">הערה</div><input value={topic6Note} onChange={(e) => setTopic6Note(e.target.value)} /></label>
-        <label><input type="checkbox" checked={topic6IsNotRelevant} onChange={(e) => setTopic6IsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
-        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
-        {topic6Message ? <p>{topic6Message}</p> : null}
+      <form className="card grid topic-6" onSubmit={submitTopic6MilestoneUpdate} style={{ marginTop: 16 }}>
+        <h2>עדכון אבן דרך – פרק 6</h2>
+        <label>
+          <div className="field-label">אבן דרך</div>
+          <select value={selectedTopic6MilestoneId} onChange={(e) => setSelectedTopic6MilestoneId(e.target.value)} required>
+            {topic6Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.subtopicName ?? "--"} - {m.name}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">סטטוס</div>
+          <select value={topic6Status} onChange={(e) => setTopic6Status(e.target.value as ProjectStatus)}>
+            {milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">
+            תאריך יעד
+            {topic6Status === "completed" && <span className="not-relevant-tag">לא רלוונטי</span>}
+          </div>
+          <input type="date" value={topic6TargetDate} onChange={(e) => setTopic6TargetDate(e.target.value)} disabled={topic6Status === "completed"} />
+        </label>
+        <label>
+          <div className="field-label">
+            תאריך תחזית
+            {topic6Status === "completed" && <span className="not-relevant-tag">לא רלוונטי</span>}
+          </div>
+          <input type="date" value={topic6ForecastDate} onChange={(e) => setTopic6ForecastDate(e.target.value)} disabled={topic6Status === "completed"} />
+        </label>
+        <label>
+          <div className="field-label">תאריך בפועל</div>
+          <input type="date" value={topic6ActualDate} onChange={(e) => setTopic6ActualDate(e.target.value)} />
+        </label>
+        <label>
+          <div className="field-label">סיבת עיכוב</div>
+          <select value={topic6DelayReason} onChange={(e) => setTopic6DelayReason(e.target.value)}>
+            <option value="">ללא</option>
+            {delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </label>
+        <label>
+          <div className="field-label">הערה</div>
+          <input value={topic6Note} onChange={(e) => setTopic6Note(e.target.value)} />
+        </label>
+        <label className="checkbox-row">
+          <input type="checkbox" checked={topic6IsNotRelevant} onChange={(e) => setTopic6IsNotRelevant(e.target.checked)} />
+          <span>לא רלוונטי</span>
+        </label>
+        <button type="submit" className="btn-primary">שמירת אבן דרך</button>
+        <MsgP msg={topic6Message} />
       </form>
 
-      <form className="card grid" onSubmit={submitTopicScheduleUpdate} style={{ marginTop: 16 }}>
+      <form className="card grid topic-schedule" onSubmit={submitTopicScheduleUpdate} style={{ marginTop: 16 }}>
         <h2>עדכון לו"ז נושא</h2>
         <label>
           <div className="field-label">נושא</div>
@@ -425,11 +646,20 @@ export default function QuickUpdatePage() {
             {topicSchedules.map((t) => <option key={t.topicIndex} value={t.topicIndex}>{t.topicName}</option>)}
           </select>
         </label>
-        <label><div className="field-label">Target</div><input type="date" value={scheduleTargetDate} onChange={(e) => setScheduleTargetDate(e.target.value)} /></label>
-        <label><div className="field-label">Forecast</div><input type="date" value={scheduleForecastDate} onChange={(e) => setScheduleForecastDate(e.target.value)} /></label>
-        <label><div className="field-label">Actual</div><input type="date" value={scheduleActualDate} onChange={(e) => setScheduleActualDate(e.target.value)} /></label>
-        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת לו"ז נושא</button>
-        {scheduleMessage ? <p>{scheduleMessage}</p> : null}
+        <label>
+          <div className="field-label">תאריך יעד</div>
+          <input type="date" value={scheduleTargetDate} onChange={(e) => setScheduleTargetDate(e.target.value)} />
+        </label>
+        <label>
+          <div className="field-label">תאריך תחזית</div>
+          <input type="date" value={scheduleForecastDate} onChange={(e) => setScheduleForecastDate(e.target.value)} />
+        </label>
+        <label>
+          <div className="field-label">תאריך בפועל</div>
+          <input type="date" value={scheduleActualDate} onChange={(e) => setScheduleActualDate(e.target.value)} />
+        </label>
+        <button type="submit" className="btn-primary">שמירת לו"ז נושא</button>
+        <MsgP msg={scheduleMessage} />
       </form>
     </main>
   );
