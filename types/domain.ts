@@ -46,7 +46,16 @@ export interface ProjectMilestone {
   forecastDate: string | null;
   actualDate: string | null;
   note: string | null;
+  delayReason?: string | null;
   isNotRelevant: boolean;
+}
+
+export interface FreezePeriod {
+  id: string;
+  reason: string;
+  note: string | null;
+  startDate: string;
+  endDate: string | null;
 }
 
 export interface ProjectTopic {
@@ -142,6 +151,10 @@ export interface ProjectDetails {
   externalPmSupervisorId: string | null;
   requiresManagementAction: boolean;
   requiresManagementActionManual?: boolean;
+  isFrozen?: boolean;
+  freezeReason?: string | null;
+  freezeNote?: string | null;
+  freezePeriods?: FreezePeriod[];
   warnings: ProjectWarning[];
   contractors: ProjectContractor[];
   topics: ProjectTopic[];

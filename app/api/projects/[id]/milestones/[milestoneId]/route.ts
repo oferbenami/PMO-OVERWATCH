@@ -5,6 +5,7 @@ import {
   getProjectTopic5Milestones
 } from "@/lib/domain/projects";
 import { recomputeAndPersistProjectStatus } from "@/lib/domain/project-status";
+import { DELAY_REASONS, isOtherReason } from "@/lib/domain/reasons";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import { ProjectStatus } from "@/types/domain";
 
@@ -13,6 +14,7 @@ type UpdateMilestoneBody = {
   targetDate?: string | null;
   forecastDate?: string | null;
   actualDate?: string | null;
+  delayReason?: string | null;
   note?: string | null;
   isNotRelevant?: boolean;
 };
@@ -23,6 +25,15 @@ export async function PATCH(
 ) {
   const { id: projectId, milestoneId } = await context.params;
   const body = (await request.json()) as UpdateMilestoneBody;
+  if ((body.status === "at_risk" || body.status === "delayed") && !body.delayReason) {
+    return NextResponse.json({ error: "Delay reason is required for At Risk/Delayed status" }, { status: 400 });
+  }
+  if (body.delayReason && !DELAY_REASONS.has(body.delayReason)) {
+    return NextResponse.json({ error: "Invalid delay reason" }, { status: 400 });
+  }
+  if (isOtherReason(body.delayReason) && !body.note) {
+    return NextResponse.json({ error: "Note is required when delay reason is Other" }, { status: 400 });
+  }
   const supabase = createSupabaseServerClient();
 
   const { data: topic } = await supabase
@@ -52,6 +63,7 @@ export async function PATCH(
   if (body.targetDate !== undefined) updates.target_date = body.targetDate;
   if (body.forecastDate !== undefined) updates.forecast_date = body.forecastDate;
   if (body.actualDate !== undefined) updates.actual_date = body.actualDate;
+  if (body.delayReason !== undefined) updates.delay_reason = body.delayReason;
   if (body.note !== undefined) updates.note = body.note;
   if (body.isNotRelevant !== undefined) updates.is_not_relevant = body.isNotRelevant;
 

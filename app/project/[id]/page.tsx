@@ -41,6 +41,22 @@ export default async function ProjectCardPage({ params }: { params: Promise<{ id
 
       <section className="card">
         <h2>?????? ??????</h2>
+        <p>??? ?????: {project.isFrozen ? "?????" : "????"}</p>
+        <ul>
+          {(project.freezePeriods ?? []).length === 0 ? (
+            <li>??? ?????? ?????</li>
+          ) : (
+            project.freezePeriods!.map((p) => (
+              <li key={p.id}>
+                {p.reason} | {p.startDate} - {p.endDate ?? "????"} {p.note ? `| ${p.note}` : ""}
+              </li>
+            ))
+          )}
+        </ul>
+      </section>
+
+      <section className="card">
+        <h2>?????? ??????</h2>
         <ul>
           {project.contractors.length === 0 ? <li>?? ?????? ??????</li> : project.contractors.map((c) => (
             <li key={c.domain}>{c.domain}: {c.contractorName ?? "--"}</li>

@@ -1,4 +1,5 @@
 import {
+  FreezePeriod,
   ProjectDashboardRow,
   ProjectDetails,
   ProjectStatus,
@@ -27,6 +28,9 @@ type DbProjectRow = {
   requires_management_action: boolean;
   requires_management_action_manual: boolean;
   delayed_since: string | null;
+  is_frozen: boolean;
+  freeze_reason: string | null;
+  freeze_note: string | null;
 };
 
 type DbProjectContractorRow = {
@@ -58,7 +62,16 @@ type DbMilestoneRow = {
   forecast_date: string | null;
   actual_date: string | null;
   note: string | null;
+  delay_reason: string | null;
   is_not_relevant: boolean | null;
+};
+
+type DbFreezePeriodRow = {
+  id: string;
+  reason: string;
+  note: string | null;
+  start_date: string;
+  end_date: string | null;
 };
 
 const TOPIC5_REQUIRED_MILESTONES = new Set([1, 8, 9, 10]);
@@ -94,7 +107,18 @@ function mapMilestoneRow(row: DbMilestoneRow): ProjectMilestone {
     forecastDate: row.forecast_date,
     actualDate: row.actual_date,
     note: row.note,
+    delayReason: row.delay_reason,
     isNotRelevant: Boolean(row.is_not_relevant)
+  };
+}
+
+function mapFreezePeriodRow(row: DbFreezePeriodRow): FreezePeriod {
+  return {
+    id: row.id,
+    reason: row.reason,
+    note: row.note,
+    startDate: row.start_date,
+    endDate: row.end_date
   };
 }
 
@@ -245,7 +269,7 @@ export async function getDashboardProjects(): Promise<ProjectDashboardRow[]> {
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("projects")
-    .select("id, project_code, project_name, internal_pm_id, additional_owner_id, expected_asset_receipt_date, occupancy_target, occupancy_forecast, priority, architect_id, external_pm_supervisor_id, computed_project_status, requires_management_action, requires_management_action_manual, delayed_since")
+    .select("id, project_code, project_name, internal_pm_id, additional_owner_id, expected_asset_receipt_date, occupancy_target, occupancy_forecast, priority, architect_id, external_pm_supervisor_id, computed_project_status, requires_management_action, requires_management_action_manual, delayed_since, is_frozen, freeze_reason, freeze_note")
     .order("project_code", { ascending: true });
 
   if (error || !data) {
@@ -309,7 +333,7 @@ export async function getProjectDetails(projectId: string): Promise<ProjectDetai
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("projects")
-    .select("id, project_code, project_name, internal_pm_id, additional_owner_id, expected_asset_receipt_date, occupancy_target, occupancy_forecast, priority, architect_id, external_pm_supervisor_id, computed_project_status, requires_management_action, requires_management_action_manual, delayed_since")
+    .select("id, project_code, project_name, internal_pm_id, additional_owner_id, expected_asset_receipt_date, occupancy_target, occupancy_forecast, priority, architect_id, external_pm_supervisor_id, computed_project_status, requires_management_action, requires_management_action_manual, delayed_since, is_frozen, freeze_reason, freeze_note")
     .eq("id", projectId)
     .single();
 
@@ -328,12 +352,17 @@ export async function getProjectDetails(projectId: string): Promise<ProjectDetai
     .order("topic_index", { ascending: true });
 
   const topicsRows = (topicsData ?? []) as DbTopicRow[];
+  const { data: freezePeriodsData } = await supabase
+    .from("freeze_periods")
+    .select("id, reason, note, start_date, end_date")
+    .eq("project_id", projectId)
+    .order("start_date", { ascending: false });
   const topicIds = topicsRows.map((t) => t.id);
 
   const { data: milestonesData } = topicIds.length
     ? await supabase
       .from("milestones")
-      .select("id, topic_id, milestone_index, subtopic_index, subtopic_name_he, milestone_name_he, status, target_date, forecast_date, actual_date, note, is_not_relevant")
+      .select("id, topic_id, milestone_index, subtopic_index, subtopic_name_he, milestone_name_he, status, target_date, forecast_date, actual_date, note, delay_reason, is_not_relevant")
       .in("topic_id", topicIds)
       .order("milestone_index", { ascending: true, nullsFirst: false })
     : { data: [] as DbMilestoneRow[] };
@@ -382,6 +411,10 @@ export async function getProjectDetails(projectId: string): Promise<ProjectDetai
     externalPmSupervisorId: project.external_pm_supervisor_id,
     requiresManagementAction: project.requires_management_action,
     requiresManagementActionManual: project.requires_management_action_manual,
+    isFrozen: project.is_frozen,
+    freezeReason: project.freeze_reason,
+    freezeNote: project.freeze_note,
+    freezePeriods: ((freezePeriodsData ?? []) as DbFreezePeriodRow[]).map(mapFreezePeriodRow),
     warnings: buildProjectWarnings(project),
     contractors: ((contractors ?? []) as DbProjectContractorRow[]).map((c) => ({
       domain: c.domain,
@@ -425,7 +458,7 @@ export async function getProjectTopic5Milestones(projectId: string): Promise<Pro
 
   const { data: milestones } = await supabase
     .from("milestones")
-    .select("id, topic_id, milestone_index, subtopic_index, subtopic_name_he, milestone_name_he, status, target_date, forecast_date, actual_date, note, is_not_relevant")
+    .select("id, topic_id, milestone_index, subtopic_index, subtopic_name_he, milestone_name_he, status, target_date, forecast_date, actual_date, note, delay_reason, is_not_relevant")
     .eq("topic_id", topic.id)
     .order("milestone_index", { ascending: true, nullsFirst: false });
 

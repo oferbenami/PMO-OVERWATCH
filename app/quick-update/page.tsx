@@ -30,6 +30,28 @@ const milestoneStatuses: Array<{ value: ProjectStatus; label: string }> = [
   { value: "not_relevant", label: "לא רלוונטי" }
 ];
 
+const delayReasons = [
+  { value: "approvals_regulation", label: "אישורים / רגולציה" },
+  { value: "planning", label: "תכנון" },
+  { value: "tender_procurement", label: "מכרז / רכש" },
+  { value: "contractor_supplier", label: "קבלן / ספק" },
+  { value: "budget_management_decision", label: "תקציב / החלטת הנהלה" },
+  { value: "external_dependency", label: "תלות חיצונית" },
+  { value: "site_asset_issue", label: "בעיית אתר / נכס" },
+  { value: "change_in_requirements", label: "שינוי דרישות" },
+  { value: "other", label: "אחר" }
+] as const;
+
+const freezeReasons = [
+  { value: "regulation_approvals", label: "רגולציה / אישורים" },
+  { value: "management_decision", label: "החלטת הנהלה" },
+  { value: "budget", label: "תקציב" },
+  { value: "external_party_or_owner", label: "גורם חיצוני / בעל נכס" },
+  { value: "contractor_supplier", label: "קבלן / ספק" },
+  { value: "operational_business_constraint", label: "אילוץ תפעולי / עסקי" },
+  { value: "other", label: "אחר" }
+] as const;
+
 export default function QuickUpdatePage() {
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [projectId, setProjectId] = useState("");
@@ -38,6 +60,7 @@ export default function QuickUpdatePage() {
   const [requiresManagementAction, setRequiresManagementAction] = useState(false);
   const [freezeReason, setFreezeReason] = useState("");
   const [freezeNote, setFreezeNote] = useState("");
+  const [isFrozen, setIsFrozen] = useState(false);
   const [contractors, setContractors] = useState<Option[]>([]);
   const [selectedContractors, setSelectedContractors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
@@ -49,6 +72,7 @@ export default function QuickUpdatePage() {
   const [topic3ForecastDate, setTopic3ForecastDate] = useState("");
   const [topic3ActualDate, setTopic3ActualDate] = useState("");
   const [topic3Note, setTopic3Note] = useState("");
+  const [topic3DelayReason, setTopic3DelayReason] = useState("");
   const [topic3IsNotRelevant, setTopic3IsNotRelevant] = useState(false);
   const [topic3Message, setTopic3Message] = useState("");
 
@@ -59,6 +83,7 @@ export default function QuickUpdatePage() {
   const [topic4ForecastDate, setTopic4ForecastDate] = useState("");
   const [topic4ActualDate, setTopic4ActualDate] = useState("");
   const [topic4Note, setTopic4Note] = useState("");
+  const [topic4DelayReason, setTopic4DelayReason] = useState("");
   const [topic4IsNotRelevant, setTopic4IsNotRelevant] = useState(false);
   const [topic4Message, setTopic4Message] = useState("");
 
@@ -69,6 +94,7 @@ export default function QuickUpdatePage() {
   const [milestoneForecastDate, setMilestoneForecastDate] = useState("");
   const [milestoneActualDate, setMilestoneActualDate] = useState("");
   const [milestoneNote, setMilestoneNote] = useState("");
+  const [milestoneDelayReason, setMilestoneDelayReason] = useState("");
   const [milestoneIsNotRelevant, setMilestoneIsNotRelevant] = useState(false);
   const [milestoneMessage, setMilestoneMessage] = useState("");
 
@@ -79,6 +105,7 @@ export default function QuickUpdatePage() {
   const [topic6ForecastDate, setTopic6ForecastDate] = useState("");
   const [topic6ActualDate, setTopic6ActualDate] = useState("");
   const [topic6Note, setTopic6Note] = useState("");
+  const [topic6DelayReason, setTopic6DelayReason] = useState("");
   const [topic6IsNotRelevant, setTopic6IsNotRelevant] = useState(false);
   const [topic6Message, setTopic6Message] = useState("");
   const [topicSchedules, setTopicSchedules] = useState<Array<{
@@ -130,6 +157,9 @@ export default function QuickUpdatePage() {
     setSelectedMilestoneId(t5[0]?.id ?? "");
     setSelectedTopic6MilestoneId(t6[0]?.id ?? "");
     setScheduleTopicIndex(String(scheduleRows[0]?.topicIndex ?? 1));
+    setIsFrozen(Boolean(project?.isFrozen));
+    setFreezeReason(project?.freezeReason ?? "");
+    setFreezeNote(project?.freezeNote ?? "");
   };
 
   useEffect(() => {
@@ -157,6 +187,7 @@ export default function QuickUpdatePage() {
     setTopic3ForecastDate(selectedTopic3Milestone?.forecastDate ?? "");
     setTopic3ActualDate(selectedTopic3Milestone?.actualDate ?? "");
     setTopic3Note(selectedTopic3Milestone?.note ?? "");
+    setTopic3DelayReason(selectedTopic3Milestone?.delayReason ?? "");
     setTopic3IsNotRelevant(Boolean(selectedTopic3Milestone?.isNotRelevant));
   }, [selectedTopic3MilestoneId, selectedTopic3Milestone]);
 
@@ -166,6 +197,7 @@ export default function QuickUpdatePage() {
     setTopic4ForecastDate(selectedTopic4Milestone?.forecastDate ?? "");
     setTopic4ActualDate(selectedTopic4Milestone?.actualDate ?? "");
     setTopic4Note(selectedTopic4Milestone?.note ?? "");
+    setTopic4DelayReason(selectedTopic4Milestone?.delayReason ?? "");
     setTopic4IsNotRelevant(Boolean(selectedTopic4Milestone?.isNotRelevant));
   }, [selectedTopic4MilestoneId, selectedTopic4Milestone]);
 
@@ -175,6 +207,7 @@ export default function QuickUpdatePage() {
     setMilestoneForecastDate(selectedMilestone?.forecastDate ?? "");
     setMilestoneActualDate(selectedMilestone?.actualDate ?? "");
     setMilestoneNote(selectedMilestone?.note ?? "");
+    setMilestoneDelayReason(selectedMilestone?.delayReason ?? "");
     setMilestoneIsNotRelevant(Boolean(selectedMilestone?.isNotRelevant));
   }, [selectedMilestoneId, selectedMilestone]);
 
@@ -184,6 +217,7 @@ export default function QuickUpdatePage() {
     setTopic6ForecastDate(selectedTopic6Milestone?.forecastDate ?? "");
     setTopic6ActualDate(selectedTopic6Milestone?.actualDate ?? "");
     setTopic6Note(selectedTopic6Milestone?.note ?? "");
+    setTopic6DelayReason(selectedTopic6Milestone?.delayReason ?? "");
     setTopic6IsNotRelevant(Boolean(selectedTopic6Milestone?.isNotRelevant));
   }, [selectedTopic6MilestoneId, selectedTopic6Milestone]);
 
@@ -222,6 +256,7 @@ export default function QuickUpdatePage() {
         occupancyForecast,
         computedProjectStatus: status,
         requiresManagementAction,
+        isFrozen,
         freezeReason: freezeReason || null,
         freezeNote: freezeNote || null,
         contractors: contractorDomains.map((domain) => ({ domain: domain.value, contractorId: selectedContractors[domain.value] || null }))
@@ -238,7 +273,7 @@ export default function QuickUpdatePage() {
     if (!projectId || !selectedTopic3MilestoneId) return;
     const response = await fetch(`/api/projects/${projectId}/topic3/milestones/${selectedTopic3MilestoneId}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: topic3Status, targetDate: topic3TargetDate || null, forecastDate: topic3ForecastDate || null, actualDate: topic3ActualDate || null, note: topic3Note || null, isNotRelevant: topic3IsNotRelevant })
+      body: JSON.stringify({ status: topic3Status, targetDate: topic3TargetDate || null, forecastDate: topic3ForecastDate || null, actualDate: topic3ActualDate || null, delayReason: topic3DelayReason || null, note: topic3Note || null, isNotRelevant: topic3IsNotRelevant })
     });
     const payload = await response.json();
     if (!response.ok) return setTopic3Message(payload.error ?? "עדכון פרק 3 נכשל");
@@ -251,7 +286,7 @@ export default function QuickUpdatePage() {
     if (!projectId || !selectedTopic4MilestoneId) return;
     const response = await fetch(`/api/projects/${projectId}/topic4/milestones/${selectedTopic4MilestoneId}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: topic4Status, targetDate: topic4TargetDate || null, forecastDate: topic4ForecastDate || null, actualDate: topic4ActualDate || null, note: topic4Note || null, isNotRelevant: topic4IsNotRelevant })
+      body: JSON.stringify({ status: topic4Status, targetDate: topic4TargetDate || null, forecastDate: topic4ForecastDate || null, actualDate: topic4ActualDate || null, delayReason: topic4DelayReason || null, note: topic4Note || null, isNotRelevant: topic4IsNotRelevant })
     });
     const payload = await response.json();
     if (response.status === 409) return setTopic4Message(payload.error ?? "לא ניתן להשלים את פרק 4 ללא אבן דרך 18");
@@ -266,7 +301,7 @@ export default function QuickUpdatePage() {
     if (!projectId || !selectedMilestoneId) return;
     const response = await fetch(`/api/projects/${projectId}/milestones/${selectedMilestoneId}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: milestoneStatus, targetDate: milestoneTargetDate || null, forecastDate: milestoneForecastDate || null, actualDate: milestoneActualDate || null, note: milestoneNote || null, isNotRelevant: milestoneIsNotRelevant })
+      body: JSON.stringify({ status: milestoneStatus, targetDate: milestoneTargetDate || null, forecastDate: milestoneForecastDate || null, actualDate: milestoneActualDate || null, delayReason: milestoneDelayReason || null, note: milestoneNote || null, isNotRelevant: milestoneIsNotRelevant })
     });
     const payload = await response.json();
     if (!response.ok) return setMilestoneMessage(payload.error ?? "עדכון אבן דרך נכשל");
@@ -280,7 +315,7 @@ export default function QuickUpdatePage() {
     if (!projectId || !selectedTopic6MilestoneId) return;
     const response = await fetch(`/api/projects/${projectId}/topic6/milestones/${selectedTopic6MilestoneId}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: topic6Status, targetDate: topic6TargetDate || null, forecastDate: topic6ForecastDate || null, actualDate: topic6ActualDate || null, note: topic6Note || null, isNotRelevant: topic6IsNotRelevant })
+      body: JSON.stringify({ status: topic6Status, targetDate: topic6TargetDate || null, forecastDate: topic6ForecastDate || null, actualDate: topic6ActualDate || null, delayReason: topic6DelayReason || null, note: topic6Note || null, isNotRelevant: topic6IsNotRelevant })
     });
     const payload = await response.json();
     if (!response.ok) return setTopic6Message(payload.error ?? "עדכון פרק 6 נכשל");
@@ -318,7 +353,8 @@ export default function QuickUpdatePage() {
         <label><div className="field-label">תחזית אכלוס</div><input type="date" value={occupancyForecast} onChange={(e) => setOccupancyForecast(e.target.value)} required /></label>
         <label><div className="field-label">סטטוס</div><select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
         <label><input type="checkbox" checked={requiresManagementAction} onChange={(e) => setRequiresManagementAction(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>נדרש טיפול הנהלה</span></label>
-        <label><div className="field-label">סיבת הקפאה (אופציונלי)</div><input value={freezeReason} onChange={(e) => setFreezeReason(e.target.value)} /></label>
+        <label><input type="checkbox" checked={isFrozen} onChange={(e) => setIsFrozen(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>פרויקט מוקפא</span></label>
+        <label><div className="field-label">סיבת הקפאה</div><select value={freezeReason} onChange={(e) => setFreezeReason(e.target.value)}><option value="">ללא</option>{freezeReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
         <label><div className="field-label">הערת הקפאה (אופציונלי)</div><input value={freezeNote} onChange={(e) => setFreezeNote(e.target.value)} /></label>
         {contractorDomains.map((domain) => <label key={domain.value}><div className="field-label">קבלן {domain.label}</div><select value={selectedContractors[domain.value] ?? ""} onChange={(e) => setContractor(domain.value, e.target.value)}><option value="">ללא</option>{contractors.map((contractor) => <option key={contractor.id} value={contractor.id}>{contractor.full_name}</option>)}</select></label>)}
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת עדכון</button>
@@ -332,6 +368,7 @@ export default function QuickUpdatePage() {
         <label><div className="field-label">תאריך יעד</div><input type="date" value={topic3TargetDate} onChange={(e) => setTopic3TargetDate(e.target.value)} /></label>
         <label><div className="field-label">תאריך תחזית</div><input type="date" value={topic3ForecastDate} onChange={(e) => setTopic3ForecastDate(e.target.value)} /></label>
         <label><div className="field-label">תאריך בפועל</div><input type="date" value={topic3ActualDate} onChange={(e) => setTopic3ActualDate(e.target.value)} /></label>
+        <label><div className="field-label">סיבת עיכוב</div><select value={topic3DelayReason} onChange={(e) => setTopic3DelayReason(e.target.value)}><option value="">ללא</option>{delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
         <label><div className="field-label">הערה</div><input value={topic3Note} onChange={(e) => setTopic3Note(e.target.value)} /></label>
         <label><input type="checkbox" checked={topic3IsNotRelevant} onChange={(e) => setTopic3IsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
@@ -345,6 +382,7 @@ export default function QuickUpdatePage() {
         <label><div className="field-label">תאריך יעד</div><input type="date" value={topic4TargetDate} onChange={(e) => setTopic4TargetDate(e.target.value)} /></label>
         <label><div className="field-label">תאריך תחזית</div><input type="date" value={topic4ForecastDate} onChange={(e) => setTopic4ForecastDate(e.target.value)} /></label>
         <label><div className="field-label">תאריך בפועל</div><input type="date" value={topic4ActualDate} onChange={(e) => setTopic4ActualDate(e.target.value)} /></label>
+        <label><div className="field-label">סיבת עיכוב</div><select value={topic4DelayReason} onChange={(e) => setTopic4DelayReason(e.target.value)}><option value="">ללא</option>{delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
         <label><div className="field-label">הערה</div><input value={topic4Note} onChange={(e) => setTopic4Note(e.target.value)} /></label>
         <label><input type="checkbox" checked={topic4IsNotRelevant} onChange={(e) => setTopic4IsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
@@ -358,6 +396,7 @@ export default function QuickUpdatePage() {
         <label><div className="field-label">תאריך יעד</div><input type="date" value={milestoneTargetDate} onChange={(e) => setMilestoneTargetDate(e.target.value)} /></label>
         <label><div className="field-label">תאריך תחזית</div><input type="date" value={milestoneForecastDate} onChange={(e) => setMilestoneForecastDate(e.target.value)} /></label>
         <label><div className="field-label">תאריך בפועל</div><input type="date" value={milestoneActualDate} onChange={(e) => setMilestoneActualDate(e.target.value)} /></label>
+        <label><div className="field-label">סיבת עיכוב</div><select value={milestoneDelayReason} onChange={(e) => setMilestoneDelayReason(e.target.value)}><option value="">ללא</option>{delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
         <label><div className="field-label">הערה</div><input value={milestoneNote} onChange={(e) => setMilestoneNote(e.target.value)} /></label>
         <label><input type="checkbox" checked={milestoneIsNotRelevant} onChange={(e) => setMilestoneIsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
@@ -371,6 +410,7 @@ export default function QuickUpdatePage() {
         <label><div className="field-label">תאריך יעד</div><input type="date" value={topic6TargetDate} onChange={(e) => setTopic6TargetDate(e.target.value)} /></label>
         <label><div className="field-label">תאריך תחזית</div><input type="date" value={topic6ForecastDate} onChange={(e) => setTopic6ForecastDate(e.target.value)} /></label>
         <label><div className="field-label">תאריך בפועל</div><input type="date" value={topic6ActualDate} onChange={(e) => setTopic6ActualDate(e.target.value)} /></label>
+        <label><div className="field-label">סיבת עיכוב</div><select value={topic6DelayReason} onChange={(e) => setTopic6DelayReason(e.target.value)}><option value="">ללא</option>{delayReasons.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}</select></label>
         <label><div className="field-label">הערה</div><input value={topic6Note} onChange={(e) => setTopic6Note(e.target.value)} /></label>
         <label><input type="checkbox" checked={topic6IsNotRelevant} onChange={(e) => setTopic6IsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
