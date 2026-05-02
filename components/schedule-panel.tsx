@@ -29,9 +29,9 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
       })
     });
     const payload = await response.json();
-    if (!response.ok) return setMessage(payload.error ?? "Schedule update failed");
+    if (!response.ok) return setMessage(payload.error ?? "????? ??\"? ????");
     if (payload.schedule) setSchedule(payload.schedule);
-    setMessage("Project schedule saved");
+    setMessage("??\"? ?????? ???? ??????");
   };
 
   const updateTopicSchedule = async (formData: FormData) => {
@@ -46,10 +46,10 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
       })
     });
     const payload = await response.json();
-    if (!response.ok) return setMessage(payload.error ?? "Topic update failed");
+    if (!response.ok) return setMessage(payload.error ?? "????? ???? ????");
     if (payload.schedule) setSchedule(payload.schedule);
     const warnings = (payload.warnings ?? []) as Array<{ message: string }>;
-    setMessage(warnings.length ? `Saved. ${warnings.map((w) => w.message).join(" | ")}` : "Saved");
+    setMessage(warnings.length ? `????. ${warnings.map((w) => w.message).join(" | ")}` : "???? ??????");
   };
 
   return (
@@ -62,9 +62,9 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
           updateProjectSchedule(new FormData(e.currentTarget));
         }}
       >
-        <label><div className="field-label">Expected Asset Receipt</div><input name="expectedAssetReceiptDate" type="date" defaultValue={schedule.expectedAssetReceiptDate} /></label>
-        <label><div className="field-label">Occupancy Target</div><input name="occupancyTarget" type="date" defaultValue={schedule.occupancyTarget} /></label>
-        <label><div className="field-label">Occupancy Forecast</div><input name="occupancyForecast" type="date" defaultValue={schedule.occupancyForecast ?? ""} /></label>
+        <label><div className="field-label">??? ???? ???</div><input name="expectedAssetReceiptDate" type="date" defaultValue={schedule.expectedAssetReceiptDate} /></label>
+        <label><div className="field-label">??? ?????</div><input name="occupancyTarget" type="date" defaultValue={schedule.occupancyTarget} /></label>
+        <label><div className="field-label">????? ?????</div><input name="occupancyForecast" type="date" defaultValue={schedule.occupancyForecast ?? ""} /></label>
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>????? ??"? ??????</button>
       </form>
 
@@ -72,7 +72,7 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
         <table className="table">
           <thead>
             <tr>
-              <th>????</th><th>??? ????</th><th>???</th><th>?????</th><th>?????</th><th>Override</th>
+              <th>????</th><th>??? ????</th><th>???</th><th>?????</th><th>?????</th><th>????? ?????</th>
             </tr>
           </thead>
           <tbody>
@@ -107,9 +107,9 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
             {schedule.topics.map((t) => <option key={t.topicIndex} value={t.topicIndex}>{t.topicName}</option>)}
           </select>
         </label>
-        <label><div className="field-label">Target</div><input name="targetDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-target`} defaultValue={selectedTopic?.targetDate ?? ""} /></label>
-        <label><div className="field-label">Forecast</div><input name="forecastDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-forecast`} defaultValue={selectedTopic?.forecastDate ?? ""} /></label>
-        <label><div className="field-label">Actual</div><input name="actualDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-actual`} defaultValue={selectedTopic?.actualDate ?? ""} /></label>
+        <label><div className="field-label">????? ???</div><input name="targetDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-target`} defaultValue={selectedTopic?.targetDate ?? ""} /></label>
+        <label><div className="field-label">????? ?????</div><input name="forecastDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-forecast`} defaultValue={selectedTopic?.forecastDate ?? ""} /></label>
+        <label><div className="field-label">????? ?????</div><input name="actualDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-actual`} defaultValue={selectedTopic?.actualDate ?? ""} /></label>
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>????? ????</button>
         {message ? <p>{message}</p> : null}
       </form>

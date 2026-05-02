@@ -6,15 +6,15 @@ export default async function DashboardPage() {
 
   return (
     <main className="container">
-      <h1>דשבורד פרויקטים</h1>
+      <h1>?????? ????????</h1>
 
-      <section className="mobile-only mobile-list" aria-label="דשבורד מובייל">
+      <section className="mobile-only mobile-list" aria-label="?????? ??????">
         {projects.map((p) => (
           <Link
             key={p.id}
             href={`/project/${p.id}`}
             className="dashboard-mobile-link"
-            aria-label={`פתיחת פרויקט ${p.name} לעדכון מהיר`}
+            aria-label={`????? ?????? ${p.name} ?????? ????`}
           >
             <article className="card mobile-project-card">
               <div>
@@ -26,39 +26,39 @@ export default async function DashboardPage() {
                   {p.statusHe}
                 </span>
                 {p.requiresManagementAction && p.requiresManagementActionManual ? (
-                  <div className="field-label">ניהול: ידני</div>
+                  <div className="field-label">?????: ????</div>
                 ) : null}
               </div>
               <div className="mobile-meta">
                 <div>
-                  <div className="field-label">מנהל פרויקט</div>
+                  <div className="field-label">???? ??????</div>
                   <div>{p.pmName}</div>
                 </div>
                 <div>
-                  <div className="field-label">יעד אכלוס</div>
+                  <div className="field-label">??? ?????</div>
                   <div>{p.occupancyTarget}</div>
                 </div>
                 <div>
-                  <div className="field-label">תחזית אכלוס</div>
+                  <div className="field-label">????? ?????</div>
                   <div>{p.occupancyForecast}</div>
                 </div>
               </div>
-              <div className="field-label dashboard-open-hint">פתח לעדכון</div>
+              <div className="field-label dashboard-open-hint">??? ??????</div>
             </article>
           </Link>
         ))}
       </section>
 
-      <section className="desktop-only card" aria-label="דשבורד דסקטופ">
+      <section className="desktop-only card" aria-label="?????? ??????">
         <table className="table">
           <thead>
             <tr>
-              <th>קוד</th>
-              <th>שם</th>
-              <th>מנהל פרויקט</th>
-              <th>סטטוס</th>
-              <th>יעד אכלוס</th>
-              <th>תחזית אכלוס</th>
+              <th>???</th>
+              <th>??</th>
+              <th>???? ??????</th>
+              <th>?????</th>
+              <th>??? ?????</th>
+              <th>????? ?????</th>
             </tr>
           </thead>
           <tbody>
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
                   <Link
                     href={`/project/${p.id}`}
                     className="dashboard-project-link"
-                    aria-label={`פתיחת פרויקט ${p.name} לעדכון מהיר`}
+                    aria-label={`????? ?????? ${p.name} ?????? ????`}
                   >
                     {p.name}
                   </Link>
@@ -80,7 +80,7 @@ export default async function DashboardPage() {
                     {p.statusHe}
                   </span>
                   {p.requiresManagementAction && p.requiresManagementActionManual ? (
-                    <div className="field-label">ניהול: ידני</div>
+                    <div className="field-label">?????: ????</div>
                   ) : null}
                 </td>
                 <td>{p.occupancyTarget}</td>
