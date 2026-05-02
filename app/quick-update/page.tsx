@@ -13,6 +13,7 @@ type ProjectOption = {
 };
 
 type Option = { id: string; full_name: string };
+type ManagedReason = { id: string; code: string; label_he: string };
 
 const contractorDomains = [
   { value: "construction_electrical_plumbing", label: "בינוי+חשמל+אינסטלציה" },
@@ -30,7 +31,7 @@ const milestoneStatuses: Array<{ value: ProjectStatus; label: string }> = [
   { value: "not_relevant", label: "לא רלוונטי" }
 ];
 
-const delayReasons = [
+const defaultDelayReasons = [
   { value: "approvals_regulation", label: "אישורים / רגולציה" },
   { value: "planning", label: "תכנון" },
   { value: "tender_procurement", label: "מכרז / רכש" },
@@ -42,7 +43,7 @@ const delayReasons = [
   { value: "other", label: "אחר" }
 ] as const;
 
-const freezeReasons = [
+const defaultFreezeReasons = [
   { value: "regulation_approvals", label: "רגולציה / אישורים" },
   { value: "management_decision", label: "החלטת הנהלה" },
   { value: "budget", label: "תקציב" },
@@ -68,6 +69,13 @@ export default function QuickUpdatePage() {
   const [freezeNote, setFreezeNote] = useState("");
   const [isFrozen, setIsFrozen] = useState(false);
   const [contractors, setContractors] = useState<Option[]>([]);
+  const [dynamicContractorDomains, setDynamicContractorDomains] = useState<Array<{ code: string; label_he: string }>>([]);
+  const [delayReasons, setDelayReasons] = useState<Array<{ value: string; label: string }>>(
+    defaultDelayReasons.map((r) => ({ value: r.value, label: r.label }))
+  );
+  const [freezeReasons, setFreezeReasons] = useState<Array<{ value: string; label: string }>>(
+    defaultFreezeReasons.map((r) => ({ value: r.value, label: r.label }))
+  );
   const [selectedContractors, setSelectedContractors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
 
@@ -177,6 +185,15 @@ export default function QuickUpdatePage() {
       setProjects(rows);
       const listsPayload = await listsResponse.json();
       setContractors(listsPayload.contractors ?? []);
+      if (Array.isArray(listsPayload.tenderDomains)) {
+        setDynamicContractorDomains(listsPayload.tenderDomains.map((d: ManagedReason) => ({ code: d.code, label_he: d.label_he })));
+      }
+      if (Array.isArray(listsPayload.delayReasons)) {
+        setDelayReasons(listsPayload.delayReasons.map((d: ManagedReason) => ({ value: d.code, label: d.label_he })));
+      }
+      if (Array.isArray(listsPayload.freezeReasons)) {
+        setFreezeReasons(listsPayload.freezeReasons.map((d: ManagedReason) => ({ value: d.code, label: d.label_he })));
+      }
       if (rows[0]) {
         setProjectId(rows[0].id);
         setOccupancyForecast(rows[0].occupancyForecast === "--" ? "" : rows[0].occupancyForecast);
@@ -281,6 +298,9 @@ export default function QuickUpdatePage() {
   const setContractor = (domain: string, contractorId: string) => {
     setSelectedContractors((prev) => ({ ...prev, [domain]: contractorId }));
   };
+  const effectiveContractorDomains = dynamicContractorDomains.length
+    ? dynamicContractorDomains.map((d) => ({ value: d.code, label: d.label_he }))
+    : contractorDomains;
 
   const submitProjectUpdate = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -295,7 +315,7 @@ export default function QuickUpdatePage() {
         isFrozen,
         freezeReason: freezeReason || null,
         freezeNote: freezeNote || null,
-        contractors: contractorDomains.map((domain) => ({ domain: domain.value, contractorId: selectedContractors[domain.value] || null }))
+        contractors: effectiveContractorDomains.map((domain) => ({ domain: domain.value, contractorId: selectedContractors[domain.value] || null }))
       })
     });
     const payload = await response.json();
@@ -421,7 +441,7 @@ export default function QuickUpdatePage() {
           <div className="field-label">הערת הקפאה (אופציונלי)</div>
           <input value={freezeNote} onChange={(e) => setFreezeNote(e.target.value)} />
         </label>
-        {contractorDomains.map((domain) => (
+        {effectiveContractorDomains.map((domain) => (
           <label key={domain.value}>
             <div className="field-label">קבלן {domain.label}</div>
             <select value={selectedContractors[domain.value] ?? ""} onChange={(e) => setContractor(domain.value, e.target.value)}>
