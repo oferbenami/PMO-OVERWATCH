@@ -39,10 +39,10 @@ export async function PATCH(
   const nextTargetDate = body.targetDate !== undefined ? body.targetDate : topic.targetDate;
   const nextActualDate = body.actualDate !== undefined ? body.actualDate : topic.actualDate;
   if (nextTargetDate && nextActualDate && nextActualDate < nextTargetDate) {
-    warnings.push({ code: "actual_before_target", message: "?????: ????? ????? ????? ?????? ???" });
+    warnings.push({ code: "actual_before_target", message: "Warning: actual date is earlier than target date" });
   }
   if (body.forecastDate !== undefined && isMaterialForecastChange(topic.forecastDate, body.forecastDate ?? null)) {
-    warnings.push({ code: "material_forecast_change", message: "?????: ????? ????? ????? (??? 3 ????)" });
+    warnings.push({ code: "material_forecast_change", message: "Warning: material forecast change (more than 3 days)" });
   }
 
   const supabase = createSupabaseServerClient();

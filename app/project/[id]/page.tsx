@@ -12,7 +12,7 @@ export default async function ProjectCardPage({ params }: { params: Promise<{ id
   if (!project) {
     return (
       <main className="container">
-        <section className="card">?????? ?? ????: {id}</section>
+        <section className="card">Project not found: {id}</section>
       </main>
     );
   }
@@ -21,43 +21,43 @@ export default async function ProjectCardPage({ params }: { params: Promise<{ id
 
   return (
     <main className="container grid">
-      <h1>????? ??????</h1>
+      <h1>Project Card</h1>
 
       <section className="card">
         <strong>{project.code} - {project.name}</strong>
-        <p>??? ???? ???: {project.expectedAssetReceiptDate}</p>
-        <p>??? ?????: {project.occupancyTarget}</p>
-        <p>????? ?????: {project.occupancyForecast ?? "--"}</p>
-        <p>??????: {project.priority}</p>
+        <p>Expected Asset Receipt: {project.expectedAssetReceiptDate}</p>
+        <p>Occupancy Target: {project.occupancyTarget}</p>
+        <p>Occupancy Forecast: {project.occupancyForecast ?? "--"}</p>
+        <p>Priority: {project.priority}</p>
         <p>
-          ????? ????? ?????: {project.requiresManagementAction ? "??" : "??"}
-          {project.requiresManagementAction && project.requiresManagementActionManual ? " (????)" : ""}
+          Management Action: {project.requiresManagementAction ? "Yes" : "No"}
+          {project.requiresManagementAction && project.requiresManagementActionManual ? " (Manual)" : ""}
         </p>
-        <p>????? ?????: {project.isFrozen ? "?????" : "????"}</p>
+        <p>Freeze Status: {project.isFrozen ? "Frozen" : "Active"}</p>
         {project.isFrozen ? (
           <>
-            <p>???? ?????: {activeFreeze?.reason ?? project.freezeReason ?? "--"}</p>
-            <p>???? ?????: {activeFreeze?.note ?? project.freezeNote ?? "--"}</p>
+            <p>Freeze Reason: {activeFreeze?.reason ?? project.freezeReason ?? "--"}</p>
+            <p>Freeze Note: {activeFreeze?.note ?? project.freezeNote ?? "--"}</p>
           </>
         ) : null}
       </section>
 
       <section className="card">
-        <h2>?????? ????? (?? ??????)</h2>
+        <h2>Warnings (Non-blocking)</h2>
         <ul>
-          {project.warnings.length === 0 ? <li>??? ??????</li> : project.warnings.map((w) => <li key={w.code}>{w.message}</li>)}
+          {project.warnings.length === 0 ? <li>No warnings</li> : project.warnings.map((w) => <li key={w.code}>{w.message}</li>)}
         </ul>
       </section>
 
       <section className="card">
-        <h2>????????? ??????</h2>
+        <h2>Freeze History</h2>
         <ul>
           {(project.freezePeriods ?? []).length === 0 ? (
-            <li>??? ?????? ?????</li>
+            <li>No freeze periods</li>
           ) : (
             project.freezePeriods!.map((p) => (
               <li key={p.id}>
-                {p.reason} | {p.startDate} - {p.endDate ?? "????"} {p.note ? `| ${p.note}` : ""}
+                {p.reason} | {p.startDate} - {p.endDate ?? "Open"} {p.note ? `| ${p.note}` : ""}
               </li>
             ))
           )}
@@ -65,9 +65,9 @@ export default async function ProjectCardPage({ params }: { params: Promise<{ id
       </section>
 
       <section className="card">
-        <h2>?????? ??????</h2>
+        <h2>Selected Contractors</h2>
         <ul>
-          {project.contractors.length === 0 ? <li>?? ?????? ??????</li> : project.contractors.map((c) => (
+          {project.contractors.length === 0 ? <li>No contractors selected</li> : project.contractors.map((c) => (
             <li key={c.domain}>{c.domain}: {c.contractorName ?? "--"}</li>
           ))}
         </ul>

@@ -29,9 +29,9 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
       })
     });
     const payload = await response.json();
-    if (!response.ok) return setMessage(payload.error ?? "????? ??\"? ????");
+    if (!response.ok) return setMessage(payload.error ?? "Schedule update failed");
     if (payload.schedule) setSchedule(payload.schedule);
-    setMessage("??\"? ?????? ???? ??????");
+    setMessage("Project schedule saved");
   };
 
   const updateTopicSchedule = async (formData: FormData) => {
@@ -46,15 +46,15 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
       })
     });
     const payload = await response.json();
-    if (!response.ok) return setMessage(payload.error ?? "????? ???? ????");
+    if (!response.ok) return setMessage(payload.error ?? "Topic update failed");
     if (payload.schedule) setSchedule(payload.schedule);
     const warnings = (payload.warnings ?? []) as Array<{ message: string }>;
-    setMessage(warnings.length ? `????. ${warnings.map((w) => w.message).join(" | ")}` : "???? ??????");
+    setMessage(warnings.length ? `Saved. ${warnings.map((w) => w.message).join(" | ")}` : "Saved");
   };
 
   return (
     <section className="card grid">
-      <h2>??"? ????????</h2>
+      <h2>Schedule and Dates</h2>
       <form
         className="grid"
         onSubmit={(e) => {
@@ -62,17 +62,17 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
           updateProjectSchedule(new FormData(e.currentTarget));
         }}
       >
-        <label><div className="field-label">??? ???? ???</div><input name="expectedAssetReceiptDate" type="date" defaultValue={schedule.expectedAssetReceiptDate} /></label>
-        <label><div className="field-label">??? ?????</div><input name="occupancyTarget" type="date" defaultValue={schedule.occupancyTarget} /></label>
-        <label><div className="field-label">????? ?????</div><input name="occupancyForecast" type="date" defaultValue={schedule.occupancyForecast ?? ""} /></label>
-        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>????? ??"? ??????</button>
+        <label><div className="field-label">Expected Asset Receipt</div><input name="expectedAssetReceiptDate" type="date" defaultValue={schedule.expectedAssetReceiptDate} /></label>
+        <label><div className="field-label">Occupancy Target</div><input name="occupancyTarget" type="date" defaultValue={schedule.occupancyTarget} /></label>
+        <label><div className="field-label">Occupancy Forecast</div><input name="occupancyForecast" type="date" defaultValue={schedule.occupancyForecast ?? ""} /></label>
+        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>Save Project Schedule</button>
       </form>
 
       <div className="table-scroll">
         <table className="table">
           <thead>
             <tr>
-              <th>????</th><th>??? ????</th><th>???</th><th>?????</th><th>?????</th><th>????? ?????</th>
+              <th>Topic</th><th>Baseline Target</th><th>Target</th><th>Forecast</th><th>Actual</th><th>Manual Override</th>
             </tr>
           </thead>
           <tbody>
@@ -83,7 +83,7 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
                 <td>{t.targetDate ?? "--"}</td>
                 <td>{t.forecastDate ?? "--"}</td>
                 <td>{t.actualDate ?? "--"}</td>
-                <td>{t.isManualTargetOverride ? "??" : "??"}</td>
+                <td>{t.isManualTargetOverride ? "Yes" : "No"}</td>
               </tr>
             ))}
           </tbody>
@@ -98,7 +98,7 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
         }}
       >
         <label>
-          <div className="field-label">????</div>
+          <div className="field-label">Topic</div>
           <select
             name="topicIndex"
             value={String(selectedTopicIndex)}
@@ -107,10 +107,10 @@ export function SchedulePanel({ projectId, initialSchedule }: Props) {
             {schedule.topics.map((t) => <option key={t.topicIndex} value={t.topicIndex}>{t.topicName}</option>)}
           </select>
         </label>
-        <label><div className="field-label">????? ???</div><input name="targetDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-target`} defaultValue={selectedTopic?.targetDate ?? ""} /></label>
-        <label><div className="field-label">????? ?????</div><input name="forecastDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-forecast`} defaultValue={selectedTopic?.forecastDate ?? ""} /></label>
-        <label><div className="field-label">????? ?????</div><input name="actualDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-actual`} defaultValue={selectedTopic?.actualDate ?? ""} /></label>
-        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>????? ????</button>
+        <label><div className="field-label">Target Date</div><input name="targetDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-target`} defaultValue={selectedTopic?.targetDate ?? ""} /></label>
+        <label><div className="field-label">Forecast Date</div><input name="forecastDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-forecast`} defaultValue={selectedTopic?.forecastDate ?? ""} /></label>
+        <label><div className="field-label">Actual Date</div><input name="actualDate" type="date" key={`${selectedTopic?.topicIndex ?? 0}-actual`} defaultValue={selectedTopic?.actualDate ?? ""} /></label>
+        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>Save Topic</button>
         {message ? <p>{message}</p> : null}
       </form>
     </section>
