@@ -1,5 +1,8 @@
+import { Topic3Panel } from "@/components/topic3-panel";
+import { Topic4Panel } from "@/components/topic4-panel";
 import { Topic5Panel } from "@/components/topic5-panel";
 import { Topic6Panel } from "@/components/topic6-panel";
+import { SchedulePanel } from "@/components/schedule-panel";
 import { getProjectDetails } from "@/lib/domain/projects";
 
 export default async function ProjectCardPage({ params }: { params: Promise<{ id: string }> }) {
@@ -40,6 +43,23 @@ export default async function ProjectCardPage({ params }: { params: Promise<{ id
           ))}
         </ul>
       </section>
+
+      <SchedulePanel
+        projectId={project.id}
+        initialSchedule={project.schedule}
+      />
+
+      <Topic3Panel
+        projectId={project.id}
+        initialMilestones={project.topics.find((t) => t.topicIndex === 3)?.milestones ?? []}
+        initialProgress={project.topic3Progress}
+      />
+
+      <Topic4Panel
+        projectId={project.id}
+        initialMilestones={project.topics.find((t) => t.topicIndex === 4)?.milestones ?? []}
+        initialProgress={project.topic4Progress}
+      />
 
       <Topic5Panel
         projectId={project.id}

@@ -42,6 +42,26 @@ export default function QuickUpdatePage() {
   const [selectedContractors, setSelectedContractors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
 
+  const [topic3Milestones, setTopic3Milestones] = useState<ProjectMilestone[]>([]);
+  const [selectedTopic3MilestoneId, setSelectedTopic3MilestoneId] = useState("");
+  const [topic3Status, setTopic3Status] = useState<ProjectStatus>("on_track");
+  const [topic3TargetDate, setTopic3TargetDate] = useState("");
+  const [topic3ForecastDate, setTopic3ForecastDate] = useState("");
+  const [topic3ActualDate, setTopic3ActualDate] = useState("");
+  const [topic3Note, setTopic3Note] = useState("");
+  const [topic3IsNotRelevant, setTopic3IsNotRelevant] = useState(false);
+  const [topic3Message, setTopic3Message] = useState("");
+
+  const [topic4Milestones, setTopic4Milestones] = useState<ProjectMilestone[]>([]);
+  const [selectedTopic4MilestoneId, setSelectedTopic4MilestoneId] = useState("");
+  const [topic4Status, setTopic4Status] = useState<ProjectStatus>("on_track");
+  const [topic4TargetDate, setTopic4TargetDate] = useState("");
+  const [topic4ForecastDate, setTopic4ForecastDate] = useState("");
+  const [topic4ActualDate, setTopic4ActualDate] = useState("");
+  const [topic4Note, setTopic4Note] = useState("");
+  const [topic4IsNotRelevant, setTopic4IsNotRelevant] = useState(false);
+  const [topic4Message, setTopic4Message] = useState("");
+
   const [topic5Milestones, setTopic5Milestones] = useState<ProjectMilestone[]>([]);
   const [selectedMilestoneId, setSelectedMilestoneId] = useState("");
   const [milestoneStatus, setMilestoneStatus] = useState<ProjectStatus>("on_track");
@@ -61,87 +81,118 @@ export default function QuickUpdatePage() {
   const [topic6Note, setTopic6Note] = useState("");
   const [topic6IsNotRelevant, setTopic6IsNotRelevant] = useState(false);
   const [topic6Message, setTopic6Message] = useState("");
+  const [topicSchedules, setTopicSchedules] = useState<Array<{
+    topicIndex: number;
+    topicName: string;
+    targetDate: string | null;
+    forecastDate: string | null;
+    actualDate: string | null;
+  }>>([]);
+  const [scheduleTopicIndex, setScheduleTopicIndex] = useState("1");
+  const [scheduleTargetDate, setScheduleTargetDate] = useState("");
+  const [scheduleForecastDate, setScheduleForecastDate] = useState("");
+  const [scheduleActualDate, setScheduleActualDate] = useState("");
+  const [scheduleMessage, setScheduleMessage] = useState("");
 
-  const selectedMilestone = useMemo(
-    () => topic5Milestones.find((m) => m.id === selectedMilestoneId) ?? null,
-    [topic5Milestones, selectedMilestoneId]
-  );
+  const selectedTopic3Milestone = useMemo(() => topic3Milestones.find((m) => m.id === selectedTopic3MilestoneId) ?? null, [topic3Milestones, selectedTopic3MilestoneId]);
+  const selectedTopic4Milestone = useMemo(() => topic4Milestones.find((m) => m.id === selectedTopic4MilestoneId) ?? null, [topic4Milestones, selectedTopic4MilestoneId]);
+  const selectedMilestone = useMemo(() => topic5Milestones.find((m) => m.id === selectedMilestoneId) ?? null, [topic5Milestones, selectedMilestoneId]);
+  const selectedTopic6Milestone = useMemo(() => topic6Milestones.find((m) => m.id === selectedTopic6MilestoneId) ?? null, [topic6Milestones, selectedTopic6MilestoneId]);
 
-  const selectedTopic6Milestone = useMemo(
-    () => topic6Milestones.find((m) => m.id === selectedTopic6MilestoneId) ?? null,
-    [topic6Milestones, selectedTopic6MilestoneId]
-  );
-
-  const loadTopic5Milestones = async (targetProjectId: string) => {
+  const loadProjectTopics = async (targetProjectId: string) => {
     const response = await fetch(`/api/projects/${targetProjectId}`);
     const payload = await response.json();
     const project = payload.project;
-    const milestones: ProjectMilestone[] = project?.topics?.find((t: { topicIndex: number }) => t.topicIndex === 5)?.milestones ?? [];
-    setTopic5Milestones(milestones);
-    const first = milestones[0];
-    setSelectedMilestoneId(first?.id ?? "");
-  };
-
-  const loadTopic6Milestones = async (targetProjectId: string) => {
-    const response = await fetch(`/api/projects/${targetProjectId}`);
-    const payload = await response.json();
-    const project = payload.project;
-    const milestones: ProjectMilestone[] = project?.topics?.find((t: { topicIndex: number }) => t.topicIndex === 6)?.milestones ?? [];
-    setTopic6Milestones(milestones);
-    const first = milestones[0];
-    setSelectedTopic6MilestoneId(first?.id ?? "");
-  };
-
-  const hydrateMilestoneForm = (milestone: ProjectMilestone | null) => {
-    setMilestoneStatus(milestone?.status ?? "on_track");
-    setMilestoneTargetDate(milestone?.targetDate ?? "");
-    setMilestoneForecastDate(milestone?.forecastDate ?? "");
-    setMilestoneActualDate(milestone?.actualDate ?? "");
-    setMilestoneNote(milestone?.note ?? "");
-    setMilestoneIsNotRelevant(Boolean(milestone?.isNotRelevant));
-  };
-
-  const hydrateTopic6MilestoneForm = (milestone: ProjectMilestone | null) => {
-    setTopic6Status(milestone?.status ?? "on_track");
-    setTopic6TargetDate(milestone?.targetDate ?? "");
-    setTopic6ForecastDate(milestone?.forecastDate ?? "");
-    setTopic6ActualDate(milestone?.actualDate ?? "");
-    setTopic6Note(milestone?.note ?? "");
-    setTopic6IsNotRelevant(Boolean(milestone?.isNotRelevant));
+    const t3: ProjectMilestone[] = project?.topics?.find((t: { topicIndex: number }) => t.topicIndex === 3)?.milestones ?? [];
+    const t4: ProjectMilestone[] = project?.topics?.find((t: { topicIndex: number }) => t.topicIndex === 4)?.milestones ?? [];
+    const t5: ProjectMilestone[] = project?.topics?.find((t: { topicIndex: number }) => t.topicIndex === 5)?.milestones ?? [];
+    const t6: ProjectMilestone[] = project?.topics?.find((t: { topicIndex: number }) => t.topicIndex === 6)?.milestones ?? [];
+    const scheduleRows = (project?.topics ?? []).map((t: {
+      topicIndex: number;
+      name: string;
+      targetDate?: string | null;
+      forecastDate?: string | null;
+      actualDate?: string | null;
+    }) => ({
+      topicIndex: t.topicIndex,
+      topicName: t.name,
+      targetDate: t.targetDate ?? null,
+      forecastDate: t.forecastDate ?? null,
+      actualDate: t.actualDate ?? null
+    }));
+    setTopic3Milestones(t3);
+    setTopic4Milestones(t4);
+    setTopic5Milestones(t5);
+    setTopic6Milestones(t6);
+    setTopicSchedules(scheduleRows);
+    setSelectedTopic3MilestoneId(t3[0]?.id ?? "");
+    setSelectedTopic4MilestoneId(t4[0]?.id ?? "");
+    setSelectedMilestoneId(t5[0]?.id ?? "");
+    setSelectedTopic6MilestoneId(t6[0]?.id ?? "");
+    setScheduleTopicIndex(String(scheduleRows[0]?.topicIndex ?? 1));
   };
 
   useEffect(() => {
     const load = async () => {
-      const [projectsResponse, listsResponse] = await Promise.all([
-        fetch("/api/projects"),
-        fetch("/api/managed-lists")
-      ]);
+      const [projectsResponse, listsResponse] = await Promise.all([fetch("/api/projects"), fetch("/api/managed-lists")]);
       const projectsPayload = await projectsResponse.json();
       const rows: ProjectOption[] = projectsPayload.projects ?? [];
       setProjects(rows);
-
       const listsPayload = await listsResponse.json();
       setContractors(listsPayload.contractors ?? []);
-
       if (rows[0]) {
         setProjectId(rows[0].id);
         setOccupancyForecast(rows[0].occupancyForecast === "--" ? "" : rows[0].occupancyForecast);
         setStatus(rows[0].status);
         setRequiresManagementAction(rows[0].requiresManagementAction);
-        await loadTopic5Milestones(rows[0].id);
-        await loadTopic6Milestones(rows[0].id);
+        await loadProjectTopics(rows[0].id);
       }
     };
     load();
   }, []);
 
   useEffect(() => {
-    hydrateMilestoneForm(selectedMilestone);
+    setTopic3Status(selectedTopic3Milestone?.status ?? "on_track");
+    setTopic3TargetDate(selectedTopic3Milestone?.targetDate ?? "");
+    setTopic3ForecastDate(selectedTopic3Milestone?.forecastDate ?? "");
+    setTopic3ActualDate(selectedTopic3Milestone?.actualDate ?? "");
+    setTopic3Note(selectedTopic3Milestone?.note ?? "");
+    setTopic3IsNotRelevant(Boolean(selectedTopic3Milestone?.isNotRelevant));
+  }, [selectedTopic3MilestoneId, selectedTopic3Milestone]);
+
+  useEffect(() => {
+    setTopic4Status(selectedTopic4Milestone?.status ?? "on_track");
+    setTopic4TargetDate(selectedTopic4Milestone?.targetDate ?? "");
+    setTopic4ForecastDate(selectedTopic4Milestone?.forecastDate ?? "");
+    setTopic4ActualDate(selectedTopic4Milestone?.actualDate ?? "");
+    setTopic4Note(selectedTopic4Milestone?.note ?? "");
+    setTopic4IsNotRelevant(Boolean(selectedTopic4Milestone?.isNotRelevant));
+  }, [selectedTopic4MilestoneId, selectedTopic4Milestone]);
+
+  useEffect(() => {
+    setMilestoneStatus(selectedMilestone?.status ?? "on_track");
+    setMilestoneTargetDate(selectedMilestone?.targetDate ?? "");
+    setMilestoneForecastDate(selectedMilestone?.forecastDate ?? "");
+    setMilestoneActualDate(selectedMilestone?.actualDate ?? "");
+    setMilestoneNote(selectedMilestone?.note ?? "");
+    setMilestoneIsNotRelevant(Boolean(selectedMilestone?.isNotRelevant));
   }, [selectedMilestoneId, selectedMilestone]);
 
   useEffect(() => {
-    hydrateTopic6MilestoneForm(selectedTopic6Milestone);
+    setTopic6Status(selectedTopic6Milestone?.status ?? "on_track");
+    setTopic6TargetDate(selectedTopic6Milestone?.targetDate ?? "");
+    setTopic6ForecastDate(selectedTopic6Milestone?.forecastDate ?? "");
+    setTopic6ActualDate(selectedTopic6Milestone?.actualDate ?? "");
+    setTopic6Note(selectedTopic6Milestone?.note ?? "");
+    setTopic6IsNotRelevant(Boolean(selectedTopic6Milestone?.isNotRelevant));
   }, [selectedTopic6MilestoneId, selectedTopic6Milestone]);
+
+  useEffect(() => {
+    const selected = topicSchedules.find((t) => String(t.topicIndex) === scheduleTopicIndex);
+    setScheduleTargetDate(selected?.targetDate ?? "");
+    setScheduleForecastDate(selected?.forecastDate ?? "");
+    setScheduleActualDate(selected?.actualDate ?? "");
+  }, [scheduleTopicIndex, topicSchedules]);
 
   const onProjectChange = async (id: string) => {
     setProjectId(id);
@@ -150,10 +201,11 @@ export default function QuickUpdatePage() {
     setOccupancyForecast(selected.occupancyForecast === "--" ? "" : selected.occupancyForecast);
     setStatus(selected.status);
     setRequiresManagementAction(selected.requiresManagementAction);
+    setTopic3Message("");
+    setTopic4Message("");
     setMilestoneMessage("");
     setTopic6Message("");
-    await loadTopic5Milestones(id);
-    await loadTopic6Milestones(id);
+    await loadProjectTopics(id);
   };
 
   const setContractor = (domain: string, contractorId: string) => {
@@ -163,7 +215,6 @@ export default function QuickUpdatePage() {
   const submitProjectUpdate = async (event: React.FormEvent) => {
     event.preventDefault();
     setMessage("");
-
     const response = await fetch(`/api/projects/${projectId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -173,251 +224,172 @@ export default function QuickUpdatePage() {
         requiresManagementAction,
         freezeReason: freezeReason || null,
         freezeNote: freezeNote || null,
-        contractors: contractorDomains.map((domain) => ({
-          domain: domain.value,
-          contractorId: selectedContractors[domain.value] || null
-        }))
+        contractors: contractorDomains.map((domain) => ({ domain: domain.value, contractorId: selectedContractors[domain.value] || null }))
       })
     });
-
     const payload = await response.json();
-    if (!response.ok) {
-      setMessage(payload.error ?? "עדכון נכשל");
-      return;
-    }
-
-    const warningText = Array.isArray(payload.warnings) && payload.warnings.length
-      ? ` | אזהרות: ${payload.warnings.map((w: { message: string }) => w.message).join("; ")}`
-      : "";
+    if (!response.ok) return setMessage(payload.error ?? "עדכון נכשל");
+    const warningText = Array.isArray(payload.warnings) && payload.warnings.length ? ` | אזהרות: ${payload.warnings.map((w: { message: string }) => w.message).join("; ")}` : "";
     setMessage(`העדכון נשמר בהצלחה${warningText}`);
+  };
+
+  const submitTopic3MilestoneUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!projectId || !selectedTopic3MilestoneId) return;
+    const response = await fetch(`/api/projects/${projectId}/topic3/milestones/${selectedTopic3MilestoneId}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: topic3Status, targetDate: topic3TargetDate || null, forecastDate: topic3ForecastDate || null, actualDate: topic3ActualDate || null, note: topic3Note || null, isNotRelevant: topic3IsNotRelevant })
+    });
+    const payload = await response.json();
+    if (!response.ok) return setTopic3Message(payload.error ?? "עדכון פרק 3 נכשל");
+    if (payload.milestone) setTopic3Milestones((prev) => prev.map((m) => (m.id === payload.milestone.id ? payload.milestone : m)));
+    setTopic3Message("אבן הדרך נשמרה בהצלחה");
+  };
+
+  const submitTopic4MilestoneUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!projectId || !selectedTopic4MilestoneId) return;
+    const response = await fetch(`/api/projects/${projectId}/topic4/milestones/${selectedTopic4MilestoneId}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: topic4Status, targetDate: topic4TargetDate || null, forecastDate: topic4ForecastDate || null, actualDate: topic4ActualDate || null, note: topic4Note || null, isNotRelevant: topic4IsNotRelevant })
+    });
+    const payload = await response.json();
+    if (response.status === 409) return setTopic4Message(payload.error ?? "לא ניתן להשלים את פרק 4 ללא אבן דרך 18");
+    if (!response.ok) return setTopic4Message(payload.error ?? "עדכון פרק 4 נכשל");
+    if (payload.milestone) setTopic4Milestones((prev) => prev.map((m) => (m.id === payload.milestone.id ? payload.milestone : m)));
+    const warnings = (payload.warnings ?? []) as ProjectWarning[];
+    setTopic4Message(warnings.length ? `אבן הדרך נשמרה. ${warnings.map((w) => w.message).join(" | ")}` : "אבן הדרך נשמרה בהצלחה");
   };
 
   const submitMilestoneUpdate = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!projectId || !selectedMilestoneId) return;
-    setMilestoneMessage("");
-
     const response = await fetch(`/api/projects/${projectId}/milestones/${selectedMilestoneId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        status: milestoneStatus,
-        targetDate: milestoneTargetDate || null,
-        forecastDate: milestoneForecastDate || null,
-        actualDate: milestoneActualDate || null,
-        note: milestoneNote || null,
-        isNotRelevant: milestoneIsNotRelevant
-      })
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: milestoneStatus, targetDate: milestoneTargetDate || null, forecastDate: milestoneForecastDate || null, actualDate: milestoneActualDate || null, note: milestoneNote || null, isNotRelevant: milestoneIsNotRelevant })
     });
-
     const payload = await response.json();
-    if (!response.ok) {
-      setMilestoneMessage(payload.error ?? "עדכון אבן דרך נכשל");
-      return;
-    }
-
-    if (payload.milestone) {
-      setTopic5Milestones((prev) => prev.map((m) => (m.id === payload.milestone.id ? payload.milestone : m)));
-    }
-
+    if (!response.ok) return setMilestoneMessage(payload.error ?? "עדכון אבן דרך נכשל");
+    if (payload.milestone) setTopic5Milestones((prev) => prev.map((m) => (m.id === payload.milestone.id ? payload.milestone : m)));
     const warnings = (payload.warnings ?? []) as ProjectWarning[];
-    if (warnings.length) {
-      const warningText = warnings
-        .map((w) =>
-          w.missingPrerequisites?.length
-            ? `${w.message}: ${w.missingPrerequisites.map((x) => `${x.milestoneIndex} ${x.name}`).join(", ")}`
-            : w.message
-        )
-        .join(" | ");
-      setMilestoneMessage(`אבן הדרך נשמרה. ${warningText}`);
-    } else {
-      setMilestoneMessage("אבן הדרך נשמרה בהצלחה");
-    }
+    setMilestoneMessage(warnings.length ? `אבן הדרך נשמרה. ${warnings.map((w) => w.message).join(" | ")}` : "אבן הדרך נשמרה בהצלחה");
   };
 
   const submitTopic6MilestoneUpdate = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!projectId || !selectedTopic6MilestoneId) return;
-    setTopic6Message("");
-
     const response = await fetch(`/api/projects/${projectId}/topic6/milestones/${selectedTopic6MilestoneId}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: topic6Status, targetDate: topic6TargetDate || null, forecastDate: topic6ForecastDate || null, actualDate: topic6ActualDate || null, note: topic6Note || null, isNotRelevant: topic6IsNotRelevant })
+    });
+    const payload = await response.json();
+    if (!response.ok) return setTopic6Message(payload.error ?? "עדכון פרק 6 נכשל");
+    if (payload.milestone) setTopic6Milestones((prev) => prev.map((m) => (m.id === payload.milestone.id ? payload.milestone : m)));
+    setTopic6Message("אבן הדרך נשמרה בהצלחה");
+  };
+
+  const submitTopicScheduleUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!projectId) return;
+    const response = await fetch(`/api/projects/${projectId}/topics/${scheduleTopicIndex}/schedule`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        status: topic6Status,
-        targetDate: topic6TargetDate || null,
-        forecastDate: topic6ForecastDate || null,
-        actualDate: topic6ActualDate || null,
-        note: topic6Note || null,
-        isNotRelevant: topic6IsNotRelevant
+        targetDate: scheduleTargetDate || null,
+        forecastDate: scheduleForecastDate || null,
+        actualDate: scheduleActualDate || null
       })
     });
-
     const payload = await response.json();
-    if (!response.ok) {
-      setTopic6Message(payload.error ?? "עדכון אבן דרך פרק 6 נכשל");
-      return;
+    if (!response.ok) return setScheduleMessage(payload.error ?? "עדכון לו\"ז נושא נכשל");
+    const warnings = (payload.warnings ?? []) as Array<{ message: string }>;
+    if (payload.schedule?.topics) {
+      setTopicSchedules(payload.schedule.topics);
     }
-    if (payload.milestone) {
-      setTopic6Milestones((prev) => prev.map((m) => (m.id === payload.milestone.id ? payload.milestone : m)));
-    }
-    setTopic6Message("אבן הדרך נשמרה בהצלחה");
+    setScheduleMessage(warnings.length ? `נשמר. ${warnings.map((w) => w.message).join(" | ")}` : "נשמר בהצלחה");
   };
 
   return (
     <main className="container">
       <h1>עדכון מהיר</h1>
-
       <form className="card grid" onSubmit={submitProjectUpdate}>
         <h2>עדכון פרויקט</h2>
-        <label>
-          <div className="field-label">פרויקט</div>
-          <select value={projectId} onChange={(e) => onProjectChange(e.target.value)} required>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>{project.code} - {project.name}</option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <div className="field-label">תחזית אכלוס</div>
-          <input type="date" value={occupancyForecast} onChange={(e) => setOccupancyForecast(e.target.value)} required />
-        </label>
-
-        <label>
-          <div className="field-label">סטטוס</div>
-          <select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)}>
-            {milestoneStatuses.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <input type="checkbox" checked={requiresManagementAction} onChange={(e) => setRequiresManagementAction(e.target.checked)} />
-          <span style={{ marginInlineStart: 8 }}>נדרש טיפול הנהלה</span>
-        </label>
-
-        <label>
-          <div className="field-label">סיבת הקפאה (אופציונלי)</div>
-          <input value={freezeReason} onChange={(e) => setFreezeReason(e.target.value)} />
-        </label>
-
-        <label>
-          <div className="field-label">הערת הקפאה (אופציונלי)</div>
-          <input value={freezeNote} onChange={(e) => setFreezeNote(e.target.value)} />
-        </label>
-
-        {contractorDomains.map((domain) => (
-          <label key={domain.value}>
-            <div className="field-label">קבלן {domain.label}</div>
-            <select value={selectedContractors[domain.value] ?? ""} onChange={(e) => setContractor(domain.value, e.target.value)}>
-              <option value="">ללא</option>
-              {contractors.map((contractor) => (
-                <option key={contractor.id} value={contractor.id}>{contractor.full_name}</option>
-              ))}
-            </select>
-          </label>
-        ))}
-
+        <label><div className="field-label">פרויקט</div><select value={projectId} onChange={(e) => onProjectChange(e.target.value)} required>{projects.map((project) => <option key={project.id} value={project.id}>{project.code} - {project.name}</option>)}</select></label>
+        <label><div className="field-label">תחזית אכלוס</div><input type="date" value={occupancyForecast} onChange={(e) => setOccupancyForecast(e.target.value)} required /></label>
+        <label><div className="field-label">סטטוס</div><select value={status} onChange={(e) => setStatus(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
+        <label><input type="checkbox" checked={requiresManagementAction} onChange={(e) => setRequiresManagementAction(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>נדרש טיפול הנהלה</span></label>
+        <label><div className="field-label">סיבת הקפאה (אופציונלי)</div><input value={freezeReason} onChange={(e) => setFreezeReason(e.target.value)} /></label>
+        <label><div className="field-label">הערת הקפאה (אופציונלי)</div><input value={freezeNote} onChange={(e) => setFreezeNote(e.target.value)} /></label>
+        {contractorDomains.map((domain) => <label key={domain.value}><div className="field-label">קבלן {domain.label}</div><select value={selectedContractors[domain.value] ?? ""} onChange={(e) => setContractor(domain.value, e.target.value)}><option value="">ללא</option>{contractors.map((contractor) => <option key={contractor.id} value={contractor.id}>{contractor.full_name}</option>)}</select></label>)}
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת עדכון</button>
         {message ? <p>{message}</p> : null}
       </form>
 
+      <form className="card grid" onSubmit={submitTopic3MilestoneUpdate} style={{ marginTop: 16 }}>
+        <h2>עדכון אבן דרך פרק 3</h2>
+        <label><div className="field-label">אבן דרך</div><select value={selectedTopic3MilestoneId} onChange={(e) => setSelectedTopic3MilestoneId(e.target.value)} required>{topic3Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.subtopicName ?? "--"} - {m.name}</option>)}</select></label>
+        <label><div className="field-label">סטטוס</div><select value={topic3Status} onChange={(e) => setTopic3Status(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
+        <label><div className="field-label">תאריך יעד</div><input type="date" value={topic3TargetDate} onChange={(e) => setTopic3TargetDate(e.target.value)} /></label>
+        <label><div className="field-label">תאריך תחזית</div><input type="date" value={topic3ForecastDate} onChange={(e) => setTopic3ForecastDate(e.target.value)} /></label>
+        <label><div className="field-label">תאריך בפועל</div><input type="date" value={topic3ActualDate} onChange={(e) => setTopic3ActualDate(e.target.value)} /></label>
+        <label><div className="field-label">הערה</div><input value={topic3Note} onChange={(e) => setTopic3Note(e.target.value)} /></label>
+        <label><input type="checkbox" checked={topic3IsNotRelevant} onChange={(e) => setTopic3IsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
+        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
+        {topic3Message ? <p>{topic3Message}</p> : null}
+      </form>
+
+      <form className="card grid" onSubmit={submitTopic4MilestoneUpdate} style={{ marginTop: 16 }}>
+        <h2>עדכון אבן דרך פרק 4</h2>
+        <label><div className="field-label">אבן דרך</div><select value={selectedTopic4MilestoneId} onChange={(e) => setSelectedTopic4MilestoneId(e.target.value)} required>{topic4Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.name}</option>)}</select></label>
+        <label><div className="field-label">סטטוס</div><select value={topic4Status} onChange={(e) => setTopic4Status(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
+        <label><div className="field-label">תאריך יעד</div><input type="date" value={topic4TargetDate} onChange={(e) => setTopic4TargetDate(e.target.value)} /></label>
+        <label><div className="field-label">תאריך תחזית</div><input type="date" value={topic4ForecastDate} onChange={(e) => setTopic4ForecastDate(e.target.value)} /></label>
+        <label><div className="field-label">תאריך בפועל</div><input type="date" value={topic4ActualDate} onChange={(e) => setTopic4ActualDate(e.target.value)} /></label>
+        <label><div className="field-label">הערה</div><input value={topic4Note} onChange={(e) => setTopic4Note(e.target.value)} /></label>
+        <label><input type="checkbox" checked={topic4IsNotRelevant} onChange={(e) => setTopic4IsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
+        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
+        {topic4Message ? <p>{topic4Message}</p> : null}
+      </form>
+
       <form className="card grid" onSubmit={submitMilestoneUpdate} style={{ marginTop: 16 }}>
         <h2>עדכון אבן דרך פרק 5</h2>
-        <label>
-          <div className="field-label">אבן דרך</div>
-          <select value={selectedMilestoneId} onChange={(e) => setSelectedMilestoneId(e.target.value)} required>
-            {topic5Milestones.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.milestoneIndex ?? "--"} - {m.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <div className="field-label">סטטוס</div>
-          <select value={milestoneStatus} onChange={(e) => setMilestoneStatus(e.target.value as ProjectStatus)}>
-            {milestoneStatuses.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <div className="field-label">תאריך יעד</div>
-          <input type="date" value={milestoneTargetDate} onChange={(e) => setMilestoneTargetDate(e.target.value)} />
-        </label>
-        <label>
-          <div className="field-label">תאריך תחזית</div>
-          <input type="date" value={milestoneForecastDate} onChange={(e) => setMilestoneForecastDate(e.target.value)} />
-        </label>
-        <label>
-          <div className="field-label">תאריך בפועל</div>
-          <input type="date" value={milestoneActualDate} onChange={(e) => setMilestoneActualDate(e.target.value)} />
-        </label>
-        <label>
-          <div className="field-label">הערה</div>
-          <input value={milestoneNote} onChange={(e) => setMilestoneNote(e.target.value)} />
-        </label>
-
-        <label>
-          <input type="checkbox" checked={milestoneIsNotRelevant} onChange={(e) => setMilestoneIsNotRelevant(e.target.checked)} />
-          <span style={{ marginInlineStart: 8 }}>לא רלוונטי</span>
-        </label>
-
+        <label><div className="field-label">אבן דרך</div><select value={selectedMilestoneId} onChange={(e) => setSelectedMilestoneId(e.target.value)} required>{topic5Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.name}</option>)}</select></label>
+        <label><div className="field-label">סטטוס</div><select value={milestoneStatus} onChange={(e) => setMilestoneStatus(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
+        <label><div className="field-label">תאריך יעד</div><input type="date" value={milestoneTargetDate} onChange={(e) => setMilestoneTargetDate(e.target.value)} /></label>
+        <label><div className="field-label">תאריך תחזית</div><input type="date" value={milestoneForecastDate} onChange={(e) => setMilestoneForecastDate(e.target.value)} /></label>
+        <label><div className="field-label">תאריך בפועל</div><input type="date" value={milestoneActualDate} onChange={(e) => setMilestoneActualDate(e.target.value)} /></label>
+        <label><div className="field-label">הערה</div><input value={milestoneNote} onChange={(e) => setMilestoneNote(e.target.value)} /></label>
+        <label><input type="checkbox" checked={milestoneIsNotRelevant} onChange={(e) => setMilestoneIsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
         {milestoneMessage ? <p>{milestoneMessage}</p> : null}
       </form>
 
       <form className="card grid" onSubmit={submitTopic6MilestoneUpdate} style={{ marginTop: 16 }}>
         <h2>עדכון אבן דרך פרק 6</h2>
-        <label>
-          <div className="field-label">אבן דרך</div>
-          <select value={selectedTopic6MilestoneId} onChange={(e) => setSelectedTopic6MilestoneId(e.target.value)} required>
-            {topic6Milestones.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.milestoneIndex ?? "--"} - {m.subtopicName ?? "--"} - {m.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <div className="field-label">סטטוס</div>
-          <select value={topic6Status} onChange={(e) => setTopic6Status(e.target.value as ProjectStatus)}>
-            {milestoneStatuses.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          <div className="field-label">תאריך יעד</div>
-          <input type="date" value={topic6TargetDate} onChange={(e) => setTopic6TargetDate(e.target.value)} />
-        </label>
-        <label>
-          <div className="field-label">תאריך תחזית</div>
-          <input type="date" value={topic6ForecastDate} onChange={(e) => setTopic6ForecastDate(e.target.value)} />
-        </label>
-        <label>
-          <div className="field-label">תאריך בפועל</div>
-          <input type="date" value={topic6ActualDate} onChange={(e) => setTopic6ActualDate(e.target.value)} />
-        </label>
-        <label>
-          <div className="field-label">הערה</div>
-          <input value={topic6Note} onChange={(e) => setTopic6Note(e.target.value)} />
-        </label>
-
-        <label>
-          <input type="checkbox" checked={topic6IsNotRelevant} onChange={(e) => setTopic6IsNotRelevant(e.target.checked)} />
-          <span style={{ marginInlineStart: 8 }}>לא רלוונטי</span>
-        </label>
-
+        <label><div className="field-label">אבן דרך</div><select value={selectedTopic6MilestoneId} onChange={(e) => setSelectedTopic6MilestoneId(e.target.value)} required>{topic6Milestones.map((m) => <option key={m.id} value={m.id}>{m.milestoneIndex ?? "--"} - {m.subtopicName ?? "--"} - {m.name}</option>)}</select></label>
+        <label><div className="field-label">סטטוס</div><select value={topic6Status} onChange={(e) => setTopic6Status(e.target.value as ProjectStatus)}>{milestoneStatuses.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></label>
+        <label><div className="field-label">תאריך יעד</div><input type="date" value={topic6TargetDate} onChange={(e) => setTopic6TargetDate(e.target.value)} /></label>
+        <label><div className="field-label">תאריך תחזית</div><input type="date" value={topic6ForecastDate} onChange={(e) => setTopic6ForecastDate(e.target.value)} /></label>
+        <label><div className="field-label">תאריך בפועל</div><input type="date" value={topic6ActualDate} onChange={(e) => setTopic6ActualDate(e.target.value)} /></label>
+        <label><div className="field-label">הערה</div><input value={topic6Note} onChange={(e) => setTopic6Note(e.target.value)} /></label>
+        <label><input type="checkbox" checked={topic6IsNotRelevant} onChange={(e) => setTopic6IsNotRelevant(e.target.checked)} /><span style={{ marginInlineStart: 8 }}>לא רלוונטי</span></label>
         <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת אבן דרך</button>
         {topic6Message ? <p>{topic6Message}</p> : null}
+      </form>
+
+      <form className="card grid" onSubmit={submitTopicScheduleUpdate} style={{ marginTop: 16 }}>
+        <h2>עדכון לו"ז נושא</h2>
+        <label>
+          <div className="field-label">נושא</div>
+          <select value={scheduleTopicIndex} onChange={(e) => setScheduleTopicIndex(e.target.value)}>
+            {topicSchedules.map((t) => <option key={t.topicIndex} value={t.topicIndex}>{t.topicName}</option>)}
+          </select>
+        </label>
+        <label><div className="field-label">Target</div><input type="date" value={scheduleTargetDate} onChange={(e) => setScheduleTargetDate(e.target.value)} /></label>
+        <label><div className="field-label">Forecast</div><input type="date" value={scheduleForecastDate} onChange={(e) => setScheduleForecastDate(e.target.value)} /></label>
+        <label><div className="field-label">Actual</div><input type="date" value={scheduleActualDate} onChange={(e) => setScheduleActualDate(e.target.value)} /></label>
+        <button type="submit" className="menu-toggle" style={{ display: "inline-flex" }}>שמירת לו"ז נושא</button>
+        {scheduleMessage ? <p>{scheduleMessage}</p> : null}
       </form>
     </main>
   );

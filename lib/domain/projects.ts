@@ -38,6 +38,10 @@ type DbTopicRow = {
   topic_index: number;
   topic_name_he: string;
   status: ProjectStatus;
+  target_date: string | null;
+  original_target_date: string | null;
+  forecast_date: string | null;
+  actual_date: string | null;
 };
 
 type DbMilestoneRow = {
@@ -148,6 +152,74 @@ export function computeTopic6Progress(topic6Milestones: ProjectMilestone[]) {
   return { isTrackingComplete, subtopics };
 }
 
+export function computeTopic3Progress(topic3Milestones: ProjectMilestone[]) {
+  const domainMap = new Map<number, { name: string; milestones: ProjectMilestone[] }>();
+  for (const m of topic3Milestones) {
+    const idx = m.subtopicIndex ?? 0;
+    if (!idx) continue;
+    const current = domainMap.get(idx) ?? { name: m.subtopicName ?? `תחום ${idx}`, milestones: [] };
+    current.milestones.push(m);
+    domainMap.set(idx, current);
+  }
+
+  const domains = [1, 2, 3, 4].map((idx) => {
+    const entry = domainMap.get(idx);
+    const milestones = entry?.milestones ?? [];
+    const isRelevant = !(milestones.length > 0 && milestones.every((m) => m.status === "not_relevant" || m.isNotRelevant));
+    const isComplete = milestones.length > 0 && milestones.every((m) =>
+      m.status === "completed" || Boolean(m.actualDate) || m.status === "not_relevant" || m.isNotRelevant
+    );
+    return {
+      domainIndex: idx,
+      domainName: entry?.name ?? `תחום ${idx}`,
+      isRelevant,
+      isComplete
+    };
+  });
+
+  const isComplete = domains.filter((d) => d.isRelevant).every((d) => d.isComplete);
+  return { isComplete, domains };
+}
+
+export function computeTopic4Progress(topic4Milestones: ProjectMilestone[]) {
+  const relevantMilestones = topic4Milestones.filter((m) => !(m.status === "not_relevant" || m.isNotRelevant));
+  const hasMilestone18Completed = topic4Milestones.some(
+    (m) => m.milestoneIndex === 18 && (m.status === "completed" || Boolean(m.actualDate))
+  );
+  const allRelevantComplete = relevantMilestones.every((m) => m.status === "completed" || Boolean(m.actualDate));
+  return {
+    isComplete: allRelevantComplete && hasMilestone18Completed,
+    hasMilestone18Completed
+  };
+}
+
+export function buildTopic4Milestone1Warning(input: {
+  milestoneIndex: number | null;
+  milestoneStatus: ProjectStatus;
+  actualDate: string | null;
+  hasConstructionContractor: boolean;
+}): ProjectWarning[] {
+  if (input.milestoneIndex !== 1) return [];
+  if (input.milestoneStatus !== "completed") return [];
+  if (input.actualDate && input.hasConstructionContractor) return [];
+  return [
+    {
+      code: "topic4_milestone1_soft_warning",
+      message: "אזהרה: סימון אבן דרך 1 כהושלמה מומלץ רק עם קבלן בינוי+חשמל+אינסטלציה ותאריך בפועל"
+    }
+  ];
+}
+
+export function buildTopic4ContractorMinimumWarning(hasConstructionContractor: boolean): ProjectWarning[] {
+  if (hasConstructionContractor) return [];
+  return [
+    {
+      code: "topic4_contractor_minimum_warning",
+      message: "אזהרה: לפני תחילת פרק 4 מומלץ להגדיר קבלן בינוי+חשמל+אינסטלציה"
+    }
+  ];
+}
+
 function buildProjectWarnings(project: DbProjectRow): ProjectWarning[] {
   const warnings: ProjectWarning[] = [];
   if (!project.architect_id) {
@@ -248,7 +320,7 @@ export async function getProjectDetails(projectId: string): Promise<ProjectDetai
 
   const { data: topicsData } = await supabase
     .from("project_topics")
-    .select("id, topic_index, topic_name_he, status")
+    .select("id, topic_index, topic_name_he, status, target_date, original_target_date, forecast_date, actual_date")
     .eq("project_id", projectId)
     .order("topic_index", { ascending: true });
 
@@ -276,11 +348,19 @@ export async function getProjectDetails(projectId: string): Promise<ProjectDetai
     topicIndex: t.topic_index,
     name: t.topic_name_he,
     status: t.status,
+    targetDate: t.target_date,
+    originalTargetDate: t.original_target_date,
+    forecastDate: t.forecast_date,
+    actualDate: t.actual_date,
     milestones: milestonesByTopic.get(t.id) ?? []
   }));
 
   const topic5 = topics.find((t) => t.topicIndex === 5);
   const topic5Readiness = computeTopic5Readiness(topic5?.milestones ?? []);
+  const topic3 = topics.find((t) => t.topicIndex === 3);
+  const topic3Progress = computeTopic3Progress(topic3?.milestones ?? []);
+  const topic4 = topics.find((t) => t.topicIndex === 4);
+  const topic4Progress = computeTopic4Progress(topic4?.milestones ?? []);
   const topic6 = topics.find((t) => t.topicIndex === 6);
   const topic6Progress = computeTopic6Progress(topic6?.milestones ?? []);
 
@@ -305,6 +385,23 @@ export async function getProjectDetails(projectId: string): Promise<ProjectDetai
       contractorName: c.contractor_name
     })),
     topics,
+    schedule: {
+      projectId: project.id,
+      expectedAssetReceiptDate: project.expected_asset_receipt_date,
+      occupancyTarget: project.occupancy_target,
+      occupancyForecast: project.occupancy_forecast,
+      topics: topics.map((t) => ({
+        topicIndex: t.topicIndex,
+        topicName: t.name,
+        targetDate: t.targetDate ?? null,
+        originalTargetDate: t.originalTargetDate ?? null,
+        forecastDate: t.forecastDate ?? null,
+        actualDate: t.actualDate ?? null,
+        isManualTargetOverride: Boolean(t.originalTargetDate && t.targetDate && t.originalTargetDate !== t.targetDate)
+      }))
+    },
+    topic3Progress,
+    topic4Progress,
     topic5Readiness,
     topic6Progress
   };

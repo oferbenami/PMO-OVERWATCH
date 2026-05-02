@@ -53,6 +53,10 @@ export interface ProjectTopic {
   topicIndex: number;
   name: string;
   status: ProjectStatus;
+  targetDate?: string | null;
+  originalTargetDate?: string | null;
+  forecastDate?: string | null;
+  actualDate?: string | null;
   milestones: ProjectMilestone[];
 }
 
@@ -71,6 +75,50 @@ export interface Topic6SubtopicProgress {
 export interface Topic6Progress {
   isTrackingComplete: boolean;
   subtopics: Topic6SubtopicProgress[];
+}
+
+export interface Topic3DomainProgress {
+  domainIndex: number;
+  domainName: string;
+  isRelevant: boolean;
+  isComplete: boolean;
+}
+
+export interface Topic3Progress {
+  isComplete: boolean;
+  domains: Topic3DomainProgress[];
+}
+
+export interface Topic4Progress {
+  isComplete: boolean;
+  hasMilestone18Completed: boolean;
+}
+
+export interface ProjectTopicSchedule {
+  topicIndex: number;
+  topicName: string;
+  targetDate: string | null;
+  originalTargetDate: string | null;
+  forecastDate: string | null;
+  actualDate: string | null;
+  isManualTargetOverride: boolean;
+}
+
+export interface TopicScheduleChangeEvent {
+  projectId: string;
+  topicIndex: number;
+  previousForecastDate: string | null;
+  nextForecastDate: string | null;
+  changedAt: string;
+}
+
+export interface ProjectScheduleState {
+  projectId: string;
+  expectedAssetReceiptDate: string;
+  occupancyTarget: string;
+  occupancyForecast: string | null;
+  occupancyActual?: string | null;
+  topics: ProjectTopicSchedule[];
 }
 
 export interface ProjectWarning {
@@ -95,6 +143,9 @@ export interface ProjectDetails {
   warnings: ProjectWarning[];
   contractors: ProjectContractor[];
   topics: ProjectTopic[];
+  schedule: ProjectScheduleState;
+  topic3Progress: Topic3Progress;
+  topic4Progress: Topic4Progress;
   topic5Readiness: Topic5Readiness;
   topic6Progress: Topic6Progress;
 }
