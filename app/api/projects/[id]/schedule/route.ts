@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getProjectDetails } from "@/lib/domain/projects";
+import { recomputeAndPersistProjectStatus } from "@/lib/domain/project-status";
 import { buildTopicBaselineDate, isValidDateInput } from "@/lib/domain/schedule";
 import { createSupabaseServerClient } from "@/lib/supabase";
 
@@ -73,6 +74,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     }
   }
 
+  const recalculated = await recomputeAndPersistProjectStatus(id);
+  if (!recalculated.ok) {
+    return NextResponse.json({ error: recalculated.error ?? "Status recalculation failed" }, { status: 500 });
+  }
+
   const details = await getProjectDetails(id);
-  return NextResponse.json({ ok: true, schedule: details?.schedule ?? null });
+  return NextResponse.json({
+    ok: true,
+    schedule: details?.schedule ?? null,
+    computedProjectStatus: recalculated.computedProjectStatus,
+    requiresManagementAction: recalculated.requiresManagementAction
+  });
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { computeTopic6Progress } from "@/lib/domain/projects";
+import { recomputeAndPersistProjectStatus } from "@/lib/domain/project-status";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import { ProjectStatus } from "@/types/domain";
 
@@ -73,10 +74,17 @@ export async function PATCH(
     isNotRelevant: Boolean(m.is_not_relevant)
   }));
 
+  const recalculated = await recomputeAndPersistProjectStatus(projectId);
+  if (!recalculated.ok) {
+    return NextResponse.json({ error: recalculated.error ?? "Status recalculation failed" }, { status: 500 });
+  }
+
   return NextResponse.json({
     ok: true,
     warnings: [],
     topic6Progress: computeTopic6Progress(mapped),
-    milestone: mapped.find((m) => m.id === milestoneId) ?? null
+    milestone: mapped.find((m) => m.id === milestoneId) ?? null,
+    computedProjectStatus: recalculated.computedProjectStatus,
+    requiresManagementAction: recalculated.requiresManagementAction
   });
 }

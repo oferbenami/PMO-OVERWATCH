@@ -25,6 +25,8 @@ type DbProjectRow = {
   external_pm_supervisor_id: string | null;
   computed_project_status: ProjectStatus;
   requires_management_action: boolean;
+  requires_management_action_manual: boolean;
+  delayed_since: string | null;
 };
 
 type DbProjectContractorRow = {
@@ -75,6 +77,7 @@ function mapProjectRow(row: DbProjectRow): ProjectDashboardRow {
     statusColor,
     exceptionMilestone: "--",
     requiresManagementAction: row.requires_management_action,
+    requiresManagementActionManual: row.requires_management_action_manual,
     topic5NotReady: false
   };
 }
@@ -242,7 +245,7 @@ export async function getDashboardProjects(): Promise<ProjectDashboardRow[]> {
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("projects")
-    .select("id, project_code, project_name, internal_pm_id, additional_owner_id, expected_asset_receipt_date, occupancy_target, occupancy_forecast, priority, architect_id, external_pm_supervisor_id, computed_project_status, requires_management_action")
+    .select("id, project_code, project_name, internal_pm_id, additional_owner_id, expected_asset_receipt_date, occupancy_target, occupancy_forecast, priority, architect_id, external_pm_supervisor_id, computed_project_status, requires_management_action, requires_management_action_manual, delayed_since")
     .order("project_code", { ascending: true });
 
   if (error || !data) {
@@ -306,7 +309,7 @@ export async function getProjectDetails(projectId: string): Promise<ProjectDetai
   const supabase = createSupabaseServerClient();
   const { data, error } = await supabase
     .from("projects")
-    .select("id, project_code, project_name, internal_pm_id, additional_owner_id, expected_asset_receipt_date, occupancy_target, occupancy_forecast, priority, architect_id, external_pm_supervisor_id, computed_project_status, requires_management_action")
+    .select("id, project_code, project_name, internal_pm_id, additional_owner_id, expected_asset_receipt_date, occupancy_target, occupancy_forecast, priority, architect_id, external_pm_supervisor_id, computed_project_status, requires_management_action, requires_management_action_manual, delayed_since")
     .eq("id", projectId)
     .single();
 
@@ -378,6 +381,7 @@ export async function getProjectDetails(projectId: string): Promise<ProjectDetai
     architectId: project.architect_id,
     externalPmSupervisorId: project.external_pm_supervisor_id,
     requiresManagementAction: project.requires_management_action,
+    requiresManagementActionManual: project.requires_management_action_manual,
     warnings: buildProjectWarnings(project),
     contractors: ((contractors ?? []) as DbProjectContractorRow[]).map((c) => ({
       domain: c.domain,

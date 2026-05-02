@@ -12,42 +12,43 @@ export default async function ProjectCardPage({ params }: { params: Promise<{ id
   if (!project) {
     return (
       <main className="container">
-        <section className="card">פרויקט לא נמצא: {id}</section>
+        <section className="card">?????? ?? ????: {id}</section>
       </main>
     );
   }
 
   return (
     <main className="container grid">
-      <h1>כרטיס פרויקט</h1>
+      <h1>????? ??????</h1>
       <section className="card">
         <strong>{project.code} - {project.name}</strong>
-        <p>צפי קבלת נכס: {project.expectedAssetReceiptDate}</p>
-        <p>יעד אכלוס: {project.occupancyTarget}</p>
-        <p>תחזית אכלוס: {project.occupancyForecast ?? "--"}</p>
-        <p>עדיפות: {project.priority}</p>
+        <p>??? ???? ???: {project.expectedAssetReceiptDate}</p>
+        <p>??? ?????: {project.occupancyTarget}</p>
+        <p>????? ?????: {project.occupancyForecast ?? "--"}</p>
+        <p>??????: {project.priority}</p>
+        <p>
+          ????? ????? ?????: {project.requiresManagementAction ? "??" : "??"}
+          {project.requiresManagementAction && project.requiresManagementActionManual ? " (????)" : ""}
+        </p>
       </section>
 
       <section className="card">
-        <h2>אזהרות הקצאה (לא חוסמות)</h2>
+        <h2>?????? ????? (?? ??????)</h2>
         <ul>
-          {project.warnings.length === 0 ? <li>אין אזהרות</li> : project.warnings.map((w) => <li key={w.code}>{w.message}</li>)}
+          {project.warnings.length === 0 ? <li>??? ??????</li> : project.warnings.map((w) => <li key={w.code}>{w.message}</li>)}
         </ul>
       </section>
 
       <section className="card">
-        <h2>קבלנים נבחרים</h2>
+        <h2>?????? ??????</h2>
         <ul>
-          {project.contractors.length === 0 ? <li>לא הוגדרו קבלנים</li> : project.contractors.map((c) => (
+          {project.contractors.length === 0 ? <li>?? ?????? ??????</li> : project.contractors.map((c) => (
             <li key={c.domain}>{c.domain}: {c.contractorName ?? "--"}</li>
           ))}
         </ul>
       </section>
 
-      <SchedulePanel
-        projectId={project.id}
-        initialSchedule={project.schedule}
-      />
+      <SchedulePanel projectId={project.id} initialSchedule={project.schedule} />
 
       <Topic3Panel
         projectId={project.id}

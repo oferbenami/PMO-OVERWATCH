@@ -25,6 +25,9 @@ export default async function DashboardPage() {
                 <span className="badge" style={{ background: p.statusColor }}>
                   {p.statusHe}
                 </span>
+                {p.requiresManagementAction && p.requiresManagementActionManual ? (
+                  <div className="field-label">ניהול: ידני</div>
+                ) : null}
               </div>
               <div className="mobile-meta">
                 <div>
@@ -76,6 +79,9 @@ export default async function DashboardPage() {
                   <span className="badge" style={{ background: p.statusColor }}>
                     {p.statusHe}
                   </span>
+                  {p.requiresManagementAction && p.requiresManagementActionManual ? (
+                    <div className="field-label">ניהול: ידני</div>
+                  ) : null}
                 </td>
                 <td>{p.occupancyTarget}</td>
                 <td>{p.occupancyForecast}</td>

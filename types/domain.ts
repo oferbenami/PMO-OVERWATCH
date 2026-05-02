@@ -12,6 +12,7 @@ export interface ProjectDashboardRow {
   statusColor: string;
   exceptionMilestone: string;
   requiresManagementAction: boolean;
+  requiresManagementActionManual?: boolean;
   topic5NotReady?: boolean;
 }
 
@@ -140,6 +141,7 @@ export interface ProjectDetails {
   architectId: string | null;
   externalPmSupervisorId: string | null;
   requiresManagementAction: boolean;
+  requiresManagementActionManual?: boolean;
   warnings: ProjectWarning[];
   contractors: ProjectContractor[];
   topics: ProjectTopic[];

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { calculateProjectWarnings, getProjectDetails, writeProjectWarnings } from "@/lib/domain/projects";
+import { recomputeAndPersistProjectStatus } from "@/lib/domain/project-status";
 import { createSupabaseServerClient } from "@/lib/supabase";
 
 type UpdateProjectBody = {
@@ -77,5 +78,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   });
   await writeProjectWarnings(id, warnings);
 
-  return NextResponse.json({ ok: true, warnings });
+  const recalculated = await recomputeAndPersistProjectStatus(id);
+  if (!recalculated.ok) {
+    return NextResponse.json({ error: recalculated.error ?? "Status recalculation failed" }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    ok: true,
+    warnings,
+    computedProjectStatus: recalculated.computedProjectStatus,
+    requiresManagementAction: recalculated.requiresManagementAction
+  });
 }

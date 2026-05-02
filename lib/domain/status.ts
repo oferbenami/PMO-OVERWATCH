@@ -25,14 +25,18 @@ export function topicStatus(topic: TopicState): ProjectStatus {
   return "on_track";
 }
 
-export function projectStatus(topics: TopicState[]): ProjectStatus {
+export function statusRank(status: ProjectStatus): number {
   const rank: Record<ProjectStatus, number> = { delayed: 5, at_risk: 4, on_track: 3, completed: 2, frozen: 1, not_relevant: 0 };
-  let current: ProjectStatus = "completed";
-  for (const t of topics) {
-    const s = topicStatus(t);
-    if (rank[s] > rank[current]) current = s;
-  }
-  return current;
+  return rank[status];
+}
+
+export function worstStatus(statuses: ProjectStatus[]): ProjectStatus {
+  if (statuses.length === 0) return "on_track";
+  return statuses.reduce((current, next) => (statusRank(next) > statusRank(current) ? next : current), statuses[0]);
+}
+
+export function projectStatus(topics: TopicState[]): ProjectStatus {
+  return worstStatus(topics.map((t) => topicStatus(t)));
 }
 
 export function toPresentation(status: ProjectStatus) {

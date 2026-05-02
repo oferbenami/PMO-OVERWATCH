@@ -17,6 +17,17 @@ export function addDays(dateIso: string, days: number): string {
   return toDateOnly(date);
 }
 
+export function diffDays(leftDateIso: string, rightDateIso: string): number {
+  const left = new Date(`${leftDateIso}T00:00:00Z`);
+  const right = new Date(`${rightDateIso}T00:00:00Z`);
+  return Math.floor((left.getTime() - right.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+export function isMaterialForecastChange(previousForecastDate: string | null, nextForecastDate: string | null): boolean {
+  if (!previousForecastDate || !nextForecastDate) return false;
+  return Math.abs(diffDays(nextForecastDate, previousForecastDate)) > 3;
+}
+
 export function buildTopicBaselineDate(expectedAssetReceiptDate: string, topicIndex: number): string | null {
   const offset = TOPIC_BASELINE_OFFSETS[topicIndex];
   if (offset === undefined) return null;

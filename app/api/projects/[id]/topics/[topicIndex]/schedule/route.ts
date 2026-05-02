@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProjectDetails } from "@/lib/domain/projects";
-import { isValidDateInput } from "@/lib/domain/schedule";
+import { recomputeAndPersistProjectStatus } from "@/lib/domain/project-status";
+import { isMaterialForecastChange, isValidDateInput } from "@/lib/domain/schedule";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import { ProjectWarning } from "@/types/domain";
 
@@ -38,7 +39,10 @@ export async function PATCH(
   const nextTargetDate = body.targetDate !== undefined ? body.targetDate : topic.targetDate;
   const nextActualDate = body.actualDate !== undefined ? body.actualDate : topic.actualDate;
   if (nextTargetDate && nextActualDate && nextActualDate < nextTargetDate) {
-    warnings.push({ code: "actual_before_target", message: "אזהרה: תאריך בפועל מוקדם מתאריך יעד" });
+    warnings.push({ code: "actual_before_target", message: "?????: ????? ????? ????? ?????? ???" });
+  }
+  if (body.forecastDate !== undefined && isMaterialForecastChange(topic.forecastDate, body.forecastDate ?? null)) {
+    warnings.push({ code: "material_forecast_change", message: "?????: ????? ????? ????? (??? 3 ????)" });
   }
 
   const supabase = createSupabaseServerClient();
@@ -70,6 +74,17 @@ export async function PATCH(
     if (historyError) return NextResponse.json({ error: historyError.message }, { status: 500 });
   }
 
+  const recalculated = await recomputeAndPersistProjectStatus(id);
+  if (!recalculated.ok) {
+    return NextResponse.json({ error: recalculated.error ?? "Status recalculation failed" }, { status: 500 });
+  }
+
   const details = await getProjectDetails(id);
-  return NextResponse.json({ ok: true, warnings, schedule: details?.schedule ?? null });
+  return NextResponse.json({
+    ok: true,
+    warnings,
+    schedule: details?.schedule ?? null,
+    computedProjectStatus: recalculated.computedProjectStatus,
+    requiresManagementAction: recalculated.requiresManagementAction
+  });
 }

@@ -4,6 +4,7 @@ import {
   buildTopic4Milestone1Warning,
   computeTopic4Progress
 } from "@/lib/domain/projects";
+import { recomputeAndPersistProjectStatus } from "@/lib/domain/project-status";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import { ProjectStatus } from "@/types/domain";
 
@@ -101,11 +102,17 @@ export async function PATCH(
       hasConstructionContractor
     })
   ];
+  const recalculated = await recomputeAndPersistProjectStatus(projectId);
+  if (!recalculated.ok) {
+    return NextResponse.json({ error: recalculated.error ?? "Status recalculation failed" }, { status: 500 });
+  }
 
   return NextResponse.json({
     ok: true,
     warnings,
     topic4Progress,
-    milestone: updatedMilestone
+    milestone: updatedMilestone,
+    computedProjectStatus: recalculated.computedProjectStatus,
+    requiresManagementAction: recalculated.requiresManagementAction
   });
 }

@@ -4,6 +4,7 @@ import {
   computeTopic5Readiness,
   getProjectTopic5Milestones
 } from "@/lib/domain/projects";
+import { recomputeAndPersistProjectStatus } from "@/lib/domain/project-status";
 import { createSupabaseServerClient } from "@/lib/supabase";
 import { ProjectStatus } from "@/types/domain";
 
@@ -60,11 +61,17 @@ export async function PATCH(
   const topic5Milestones = await getProjectTopic5Milestones(projectId);
   const topic5Readiness = computeTopic5Readiness(topic5Milestones);
   const warnings = existing.milestone_index === 11 ? buildTopic5Milestone11Warning(topic5Milestones) : [];
+  const recalculated = await recomputeAndPersistProjectStatus(projectId);
+  if (!recalculated.ok) {
+    return NextResponse.json({ error: recalculated.error ?? "Status recalculation failed" }, { status: 500 });
+  }
 
   return NextResponse.json({
     ok: true,
     warnings,
     topic5Readiness,
-    milestone: topic5Milestones.find((m) => m.id === milestoneId) ?? null
+    milestone: topic5Milestones.find((m) => m.id === milestoneId) ?? null,
+    computedProjectStatus: recalculated.computedProjectStatus,
+    requiresManagementAction: recalculated.requiresManagementAction
   });
 }
