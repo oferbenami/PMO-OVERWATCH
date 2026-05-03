@@ -1,4 +1,4 @@
-﻿insert into users_profile (id, email, full_name, role, state)
+insert into users_profile (id, email, full_name, role, state)
 values
   ('00000000-0000-0000-0000-000000000001', 'admin@pmo.local', 'System Admin', 'admin', 'active')
 on conflict do nothing;
